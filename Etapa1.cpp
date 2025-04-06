@@ -191,17 +191,28 @@ int main() {
     Grafo grafo;
  
     // Leitura do cabeçalho
-    getline(arquivo, linha); grafo.nome = linha.substr(linha.find(":") + 1);
-    getline(arquivo, linha); grafo.valorOtimo = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.numVeiculos = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.capacidadeVeiculo = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.deposito = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.numVertices = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.numArestas = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.numArcos = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.numVerticesRequeridos = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.numArestasRequeridas = extrairValorInteiro(linha);
-    getline(arquivo, linha); grafo.numArcosRequeridos = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.nome = linha.substr(linha.find(":") + 1);
+    getline(arquivo, linha); 
+    grafo.valorOtimo = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.numVeiculos = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.capacidadeVeiculo = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.deposito = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.numVertices = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.numArestas = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.numArcos = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.numVerticesRequeridos = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.numArestasRequeridas = extrairValorInteiro(linha);
+    getline(arquivo, linha); 
+    grafo.numArcosRequeridos = extrairValorInteiro(linha);
 
     getline(arquivo, linha); getline(arquivo, linha);
     while (getline(arquivo, linha) && !linha.empty()) {

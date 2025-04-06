@@ -189,7 +189,7 @@ int main() {
 
     string linha;
     Grafo grafo;
-
+ 
     // Leitura do cabeçalho
     getline(arquivo, linha); grafo.nome = linha.substr(linha.find(":") + 1);
     getline(arquivo, linha); grafo.valorOtimo = extrairValorInteiro(linha);

@@ -53,6 +53,7 @@ struct Grafo {
     vector<Arco> arcos;
 };
 
+// Função para extrair número após ":"
 int extrairValorInteiro(const string& linha) {
     size_t pos = linha.find(":");
     if (pos == string::npos) return 0;
@@ -66,15 +67,13 @@ int extrairValorInteiro(const string& linha) {
     }
 }
 
-void calcularEstatisticas(const Grafo& grafo) {
-    int V = grafo.numVertices;
-    int E = grafo.arestas.size();
-    int A = grafo.arcos.size();
+// Densidade
+double calcularDensidade(int V, int E, int A) {
+    return (double)(2 * E + A) / (V * (V - 1));
+}
 
-    // Densidade (considerando grafo direcionado e nao-direcionado)
-    double densidade = (double)(E + A) / (V * (V - 1));
-
-    // Grau dos vertices
+// Grau mínimo e máximo
+pair<int, int> calcularGraus(int V, const Grafo& grafo) {
     vector<int> grau(V + 1, 0);
     for (const Aresta& a : grafo.arestas) {
         grau[a.origem]++;
@@ -82,6 +81,7 @@ void calcularEstatisticas(const Grafo& grafo) {
     }
     for (const Arco& a : grafo.arcos) {
         grau[a.origem]++;
+        grau[a.destino]++;
     }
 
     int grauMin = numeric_limits<int>::max();
@@ -91,7 +91,20 @@ void calcularEstatisticas(const Grafo& grafo) {
         grauMax = max(grauMax, grau[i]);
     }
 
-    // Componentes conectados (apenas ignorando direção)
+    return {grauMin, grauMax};
+}
+
+// DFS recursivo para componentes conectados
+void dfsComponentes(int v, vector<bool>& visitado, const vector<vector<int>>& adj) {
+    visitado[v] = true;
+    for (int viz : adj[v]) {
+        if (!visitado[viz]) {
+            dfsComponentes(viz, visitado, adj);
+        }
+    }
+}
+
+int calcularComponentesConectados(int V, const Grafo& grafo) {
     vector<bool> visitado(V + 1, false);
     vector<vector<int>> adj(V + 1);
     for (const Aresta& a : grafo.arestas) {
@@ -103,42 +116,45 @@ void calcularEstatisticas(const Grafo& grafo) {
         adj[a.destino].push_back(a.origem);
     }
 
-    auto dfs = [&](int v, auto&& dfs_ref) -> void {
-        visitado[v] = true;
-        for (int viz : adj[v]) {
-            if (!visitado[viz]) dfs_ref(viz, dfs_ref);
-        }
-    };
-
     int componentes = 0;
     for (int i = 1; i <= V; ++i) {
         if (!visitado[i]) {
-            dfs(i, dfs);
+            dfsComponentes(i, visitado, adj);
             componentes++;
         }
     }
-
-    cout << "\n=== Estatisticas ===" << endl;
-    cout << "Densidade do grafo: " << densidade << endl;
-    cout << "Componentes conectados: " << componentes << endl;
-    cout << "Grau minimo: " << grauMin << endl;
-    cout << "Grau maximo: " << grauMax << endl;
+    return componentes;
 }
 
-void calcularEstatisticasAvancadas(const vector<vector<int>>& dist, const vector<vector<int>>& pred, int V) {
+// Caminho médio e diâmetro
+pair<double, int> calcularCaminhoMedioDiametro(const vector<vector<int>>& dist, int V) {
     const int INF = numeric_limits<int>::max();
     int totalDistancia = 0;
     int paresValidos = 0;
     int diametro = 0;
+
+    for (int i = 1; i <= V; ++i) {
+        for (int j = 1; j <= V; ++j) {
+            if (i != j && dist[i][j] != INF) {
+                totalDistancia += dist[i][j];
+                paresValidos++;
+                diametro = max(diametro, dist[i][j]);
+            }
+        }
+    }
+
+    double caminhoMedio = paresValidos > 0 ? (double)totalDistancia / paresValidos : 0;
+    return {caminhoMedio, diametro};
+}
+
+// Intermediação
+vector<int> calcularIntermediacao(const vector<vector<int>>& pred, const vector<vector<int>>& dist, int V) {
+    const int INF = numeric_limits<int>::max();
     vector<int> inter(V + 1, 0);
 
     for (int s = 1; s <= V; ++s) {
         for (int t = 1; t <= V; ++t) {
             if (s != t && dist[s][t] != INF) {
-                totalDistancia += dist[s][t];
-                paresValidos++;
-                diametro = max(diametro, dist[s][t]);
-
                 int atual = t;
                 while (pred[s][atual] != -1 && pred[s][atual] != s) {
                     inter[pred[s][atual]]++;
@@ -147,20 +163,7 @@ void calcularEstatisticasAvancadas(const vector<vector<int>>& dist, const vector
             }
         }
     }
-
-    cout << "\n=== Estatisticas Avancadas ===" << endl;
-    cout << "Caminho medio: ";
-    if (paresValidos > 0)
-        cout << (double)totalDistancia / paresValidos << endl;
-    else
-        cout << "Indefinido (grafo desconexo)" << endl;
-
-    cout << "Diametro: " << diametro << endl;
-
-    cout << "Intermediacao (frequencia nos caminhos minimos):" << endl;
-    for (int i = 1; i <= V; ++i) {
-        cout << "Vertice " << i << ": " << inter[i] << endl;
-    }
+    return inter;
 }
 
 int main() {
@@ -173,6 +176,7 @@ int main() {
     string linha;
     Grafo grafo;
 
+    // Leitura do cabeçalho
     try {
         getline(arquivo, linha); grafo.nome = linha.substr(linha.find(":") + 1);
         getline(arquivo, linha); grafo.valorOtimo = extrairValorInteiro(linha);
@@ -190,19 +194,18 @@ int main() {
         return 1;
     }
 
-    getline(arquivo, linha);
-    getline(arquivo, linha);
+    // Leitura das seções
+    getline(arquivo, linha); getline(arquivo, linha); // pula em branco + ReN
     while (getline(arquivo, linha) && !linha.empty()) {
         stringstream ss(linha);
-        string idTexto;
-        int demanda, custo;
+        string idTexto; int demanda, custo;
         ss >> idTexto >> demanda >> custo;
         if (idTexto.empty()) continue;
         int id = stoi(idTexto.substr(1));
         grafo.vertices.push_back({id, true, demanda, custo});
     }
 
-    getline(arquivo, linha);
+    getline(arquivo, linha); // ReE
     while (getline(arquivo, linha) && !linha.empty()) {
         stringstream ss(linha);
         string idTexto;
@@ -212,11 +215,10 @@ int main() {
         grafo.arestas.push_back({stoi(idTexto.substr(1)), origem, destino, custoTransito, demanda, custoAtendimento});
     }
 
-    getline(arquivo, linha);
+    getline(arquivo, linha); // NrE
     while (getline(arquivo, linha) && !linha.empty()) {
         stringstream ss(linha);
-        string idTexto;
-        int origem, destino, custoTransito;
+        string idTexto; int origem, destino, custoTransito;
         ss >> idTexto >> origem >> destino >> custoTransito;
         if (idTexto.substr(0, 3) != "NrE") continue;
         string numeroStr = idTexto.substr(3);
@@ -224,22 +226,20 @@ int main() {
         grafo.arestas.push_back({stoi(numeroStr), origem, destino, custoTransito, 0, 0, false});
     }
 
-    getline(arquivo, linha);
+    getline(arquivo, linha); // ReA
     while (getline(arquivo, linha) && !linha.empty()) {
         stringstream ss(linha);
-        string idTexto;
-        int origem, destino, custoTransito, demanda, custoAtendimento;
+        string idTexto; int origem, destino, custoTransito, demanda, custoAtendimento;
         ss >> idTexto >> origem >> destino >> custoTransito >> demanda >> custoAtendimento;
         if (idTexto.empty()) continue;
         grafo.arcos.push_back({stoi(idTexto.substr(1)), origem, destino, custoTransito, demanda, custoAtendimento, true});
     }
 
-    getline(arquivo, linha);
+    getline(arquivo, linha); // Arc
     while (getline(arquivo, linha)) {
         if (linha.empty()) continue;
         stringstream ss(linha);
-        string idTexto;
-        int origem, destino, custoTransito;
+        string idTexto; int origem, destino, custoTransito;
         ss >> idTexto >> origem >> destino >> custoTransito;
         if (idTexto.size() < 4) continue;
         string numeroStr = idTexto.substr(3);
@@ -247,30 +247,10 @@ int main() {
         try {
             int id = stoi(numeroStr);
             grafo.arcos.push_back({id, origem, destino, custoTransito, 0, 0, false});
-        } catch (...) {
-            continue;
-        }
+        } catch (...) { continue; }
     }
 
-    cout << "Arquivo lido com sucesso!" << endl;
-    cout << "Nome: " << grafo.nome << endl;
-    cout << "Valor otimo: " << grafo.valorOtimo << endl;
-    cout << "Veiculos: " << grafo.numVeiculos << endl;
-    cout << "Capacidade: " << grafo.capacidadeVeiculo << endl;
-    cout << "Deposito: " << grafo.deposito << endl;
-    cout << "Vertices totais: " << grafo.numVertices << ", requeridos: " << grafo.numVerticesRequeridos << endl;
-    cout << "Arestas totais: " << grafo.numArestas << ", requeridas: " << grafo.numArestasRequeridas << endl;
-    cout << "Arcos totais: " << grafo.numArcos << ", requeridos: " << grafo.numArcosRequeridos << endl;
-
-    int obrigatorios = 0, naoObrigatorios = 0;
-    for (const Arco& a : grafo.arcos) {
-        if (a.requerServico) obrigatorios++;
-        else naoObrigatorios++;
-    }
-
-    cout << "Arcos obrigatorios: " << obrigatorios << endl;
-    cout << "Arcos nao obrigatorios: " << naoObrigatorios << endl;
-
+    // Matriz de Floyd-Warshall
     const int INF = numeric_limits<int>::max();
     int N = grafo.numVertices + 1;
     vector<vector<int>> dist(N, vector<int>(N, INF));
@@ -293,39 +273,64 @@ int main() {
         pred[a.origem][a.destino] = a.origem;
     }
 
-    for (int k = 1; k < N; ++k) {
-        for (int i = 1; i < N; ++i) {
-            for (int j = 1; j < N; ++j) {
-                if (dist[i][k] != INF && dist[k][j] != INF &&
-                    dist[i][k] + dist[k][j] < dist[i][j]) {
+    for (int k = 1; k < N; ++k)
+        for (int i = 1; i < N; ++i)
+            for (int j = 1; j < N; ++j)
+                if (dist[i][k] != INF && dist[k][j] != INF && dist[i][k] + dist[k][j] < dist[i][j]) {
                     dist[i][j] = dist[i][k] + dist[k][j];
                     pred[i][j] = pred[k][j];
                 }
-            }
-        }
-    }
 
+    // Impressão dos dados
+    cout << "\nArquivo lido com sucesso!" << endl;
+    cout << "Nome: " << grafo.nome << endl;
+    cout << "Valor otimo: " << grafo.valorOtimo << endl;
+    cout << "Veiculos: " << grafo.numVeiculos << endl;
+    cout << "Capacidade: " << grafo.capacidadeVeiculo << endl;
+    cout << "Deposito: " << grafo.deposito << endl;
+    cout << "Vertices totais: " << grafo.numVertices << ", requeridos: " << grafo.numVerticesRequeridos << endl;
+    cout << "Arestas totais: " << grafo.numArestas << ", requeridas: " << grafo.numArestasRequeridas << endl;
+    cout << "Arcos totais: " << grafo.numArcos << ", requeridos: " << grafo.numArcosRequeridos << endl;
+
+    // Matrizes
     cout << "\nMatriz de caminhos mais curtos (dist[i][j]):\n";
     for (int i = 1; i < N; ++i) {
         for (int j = 1; j < N; ++j) {
-            if (dist[i][j] == INF)
-                cout << "INF ";
-            else
-                cout << dist[i][j] << " ";
+            if (dist[i][j] == INF) cout << "INF ";
+            else cout << dist[i][j] << " ";
         }
         cout << endl;
     }
 
     cout << "\nMatriz de predecessores (pred[i][j]):\n";
     for (int i = 1; i < N; ++i) {
-        for (int j = 1; j < N; ++j) {
+        for (int j = 1; j < N; ++j)
             cout << pred[i][j] << " ";
-        }
         cout << endl;
     }
 
-    calcularEstatisticas(grafo);
-    calcularEstatisticasAvancadas(dist, pred, grafo.numVertices);
+    // Estatísticas individuais
+    int V = grafo.numVertices;
+    double densidade = calcularDensidade(V, grafo.arestas.size(), grafo.arcos.size());
+    pair<int, int> graus = calcularGraus(V, grafo);
+    int componentes = calcularComponentesConectados(V, grafo);
+    pair<double, int> mediaDiametro = calcularCaminhoMedioDiametro(dist, V);
+    vector<int> intermediacao = calcularIntermediacao(pred, dist, V);
+
+    // Exibir estatísticas
+    cout << "\n=== Estatisticas ===" << endl;
+    cout << "Densidade do grafo: " << densidade << endl;
+    cout << "Componentes conectados: " << componentes << endl;
+    cout << "Grau minimo: " << graus.first << endl;
+    cout << "Grau maximo: " << graus.second << endl;
+
+    cout << "\n=== Estatisticas Avancadas ===" << endl;
+    cout << "Caminho medio: " << mediaDiametro.first << endl;
+    cout << "Diametro: " << mediaDiametro.second << endl;
+    cout << "Intermediacao (frequencia nos caminhos minimos):" << endl;
+    for (int i = 1; i <= V; ++i) {
+        cout << "Vertice " << i << ": " << intermediacao[i] << endl;
+    }
 
     return 0;
 }

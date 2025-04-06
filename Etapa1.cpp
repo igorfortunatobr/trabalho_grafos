@@ -181,158 +181,169 @@ void exibirEstatisticasFormatadas(
 // === Função Principal ===
 
 int main() {
-    ifstream arquivo("TESTE.dat");
-    if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo!" << endl;
-        return 1;
-    }
+	string nomeArquivo;
+	
+	cout << "Digite o nome do arquivo: ";
+	cin >> nomeArquivo;
+	while (nomeArquivo != "")
+	{
+		ifstream arquivo("./instancias/"+nomeArquivo);
+		if (!arquivo.is_open()) {
+			cerr << "Erro ao abrir o arquivo!" << endl;
+			return 1;
+		}
 
-    string linha;
-    Grafo grafo;
- 
-    // Leitura do cabeçalho
-    getline(arquivo, linha); 
-    grafo.nome = linha.substr(linha.find(":") + 1);
-    getline(arquivo, linha); 
-    grafo.valorOtimo = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.numVeiculos = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.capacidadeVeiculo = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.deposito = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.numVertices = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.numArestas = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.numArcos = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.numVerticesRequeridos = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.numArestasRequeridas = extrairValorInteiro(linha);
-    getline(arquivo, linha); 
-    grafo.numArcosRequeridos = extrairValorInteiro(linha);
+		string linha;
+		Grafo grafo;
+	 
+		// Leitura do cabeçalho
+		getline(arquivo, linha); 
+		grafo.nome = linha.substr(linha.find(":") + 1);
+		getline(arquivo, linha); 
+		grafo.valorOtimo = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.numVeiculos = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.capacidadeVeiculo = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.deposito = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.numVertices = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.numArestas = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.numArcos = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.numVerticesRequeridos = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.numArestasRequeridas = extrairValorInteiro(linha);
+		getline(arquivo, linha); 
+		grafo.numArcosRequeridos = extrairValorInteiro(linha);
 
-    getline(arquivo, linha); getline(arquivo, linha);
-    while (getline(arquivo, linha) && !linha.empty()) {
-        stringstream ss(linha);
-        string idTexto; int demanda, custo;
-        ss >> idTexto >> demanda >> custo;
-        if (idTexto.empty()) continue;
-        int id = stoi(idTexto.substr(1));
-        grafo.vertices.push_back({id, true, demanda, custo});
-    }
+		getline(arquivo, linha); 
+		getline(arquivo, linha);
+		while (getline(arquivo, linha) && !linha.empty()) {
+			stringstream ss(linha);
+			string idTexto; int demanda, custo;
+			ss >> idTexto >> demanda >> custo;
+			if (idTexto.empty()) continue;
+			int id = stoi(idTexto.substr(1));
+			grafo.vertices.push_back({id, true, demanda, custo});
+		}
 
-    getline(arquivo, linha);
-    while (getline(arquivo, linha) && !linha.empty()) {
-        stringstream ss(linha);
-        string idTexto;
-        int origem, destino, custoTransito, demanda, custoAtendimento;
-        ss >> idTexto >> origem >> destino >> custoTransito >> demanda >> custoAtendimento;
-        if (idTexto.empty()) continue;
-        grafo.arestas.push_back({stoi(idTexto.substr(1)), origem, destino, custoTransito, demanda, custoAtendimento});
-    }
+		getline(arquivo, linha);
+		while (getline(arquivo, linha) && !linha.empty()) {
+			stringstream ss(linha);
+			string idTexto;
+			int origem, destino, custoTransito, demanda, custoAtendimento;
+			ss >> idTexto >> origem >> destino >> custoTransito >> demanda >> custoAtendimento;
+			if (idTexto.empty()) continue;
+			grafo.arestas.push_back({stoi(idTexto.substr(1)), origem, destino, custoTransito, demanda, custoAtendimento});
+		}
 
-    getline(arquivo, linha);
-    while (getline(arquivo, linha) && !linha.empty()) {
-        stringstream ss(linha);
-        string idTexto;
-        int origem, destino, custoTransito;
-        ss >> idTexto >> origem >> destino >> custoTransito;
-        if (idTexto.substr(0, 3) != "NrE") continue;
-        string numeroStr = idTexto.substr(3);
-        if (numeroStr.empty()) continue;
-        grafo.arestas.push_back({stoi(numeroStr), origem, destino, custoTransito, 0, 0, false});
-    }
+		getline(arquivo, linha);
+		while (getline(arquivo, linha) && !linha.empty()) {
+			stringstream ss(linha);
+			string idTexto;
+			int origem, destino, custoTransito;
+			ss >> idTexto >> origem >> destino >> custoTransito;
+			if (idTexto.substr(0, 3) != "NrE") continue;
+			string numeroStr = idTexto.substr(3);
+			if (numeroStr.empty()) continue;
+			grafo.arestas.push_back({stoi(numeroStr), origem, destino, custoTransito, 0, 0, false});
+		}
 
-    getline(arquivo, linha);
-    while (getline(arquivo, linha) && !linha.empty()) {
-        stringstream ss(linha);
-        string idTexto;
-        int origem, destino, custoTransito, demanda, custoAtendimento;
-        ss >> idTexto >> origem >> destino >> custoTransito >> demanda >> custoAtendimento;
-        if (idTexto.empty()) continue;
-        grafo.arcos.push_back({stoi(idTexto.substr(1)), origem, destino, custoTransito, demanda, custoAtendimento, true});
-    }
+		getline(arquivo, linha);
+		while (getline(arquivo, linha) && !linha.empty()) {
+			stringstream ss(linha);
+			string idTexto;
+			int origem, destino, custoTransito, demanda, custoAtendimento;
+			ss >> idTexto >> origem >> destino >> custoTransito >> demanda >> custoAtendimento;
+			if (idTexto.empty()) continue;
+			grafo.arcos.push_back({stoi(idTexto.substr(1)), origem, destino, custoTransito, demanda, custoAtendimento, true});
+		}
 
-    getline(arquivo, linha);
-    while (getline(arquivo, linha)) {
-        if (linha.empty()) continue;
-        stringstream ss(linha);
-        string idTexto;
-        int origem, destino, custoTransito;
-        ss >> idTexto >> origem >> destino >> custoTransito;
-        if (idTexto.size() < 4) continue;
-        string numeroStr = idTexto.substr(3);
-        if (numeroStr.empty()) continue;
-        grafo.arcos.push_back({stoi(numeroStr), origem, destino, custoTransito, 0, 0, false});
-    }
+		getline(arquivo, linha);
+		while (getline(arquivo, linha)) {
+			if (linha.empty()) continue;
+			stringstream ss(linha);
+			string idTexto;
+			int origem, destino, custoTransito;
+			ss >> idTexto >> origem >> destino >> custoTransito;
+			if (idTexto.size() < 4) continue;
+			string numeroStr = idTexto.substr(3);
+			if (numeroStr.empty()) continue;
+			grafo.arcos.push_back({stoi(numeroStr), origem, destino, custoTransito, 0, 0, false});
+		}
 
-    // Algoritmo de Floyd-Warshall
-    const int INF = numeric_limits<int>::max();
-    int N = grafo.numVertices + 1;
-    vector<vector<int>> dist(N, vector<int>(N, INF));
-    vector<vector<int>> pred(N, vector<int>(N, -1));
+		// Algoritmo de Floyd-Warshall
+		const int INF = numeric_limits<int>::max();
+		int N = grafo.numVertices + 1;
+		vector<vector<int>> dist(N, vector<int>(N, INF));
+		vector<vector<int>> pred(N, vector<int>(N, -1));
 
-    for (int i = 1; i < N; ++i) {
-        dist[i][i] = 0;
-        pred[i][i] = i;
-    }
+		for (int i = 1; i < N; ++i) {
+			dist[i][i] = 0;
+			pred[i][i] = i;
+		}
 
-    for (const Aresta& a : grafo.arestas) {
-        dist[a.origem][a.destino] = a.custoTransito;
-        dist[a.destino][a.origem] = a.custoTransito;
-        pred[a.origem][a.destino] = a.origem;
-        pred[a.destino][a.origem] = a.destino;
-    }
+		for (const Aresta& a : grafo.arestas) {
+			dist[a.origem][a.destino] = a.custoTransito;
+			dist[a.destino][a.origem] = a.custoTransito;
+			pred[a.origem][a.destino] = a.origem;
+			pred[a.destino][a.origem] = a.destino;
+		}
 
-    for (const Arco& a : grafo.arcos) {
-        dist[a.origem][a.destino] = a.custoTransito;
-        pred[a.origem][a.destino] = a.origem;
-    }
+		for (const Arco& a : grafo.arcos) {
+			dist[a.origem][a.destino] = a.custoTransito;
+			pred[a.origem][a.destino] = a.origem;
+		}
 
-    for (int k = 1; k < N; ++k) {
-        for (int i = 1; i < N; ++i) {
-            for (int j = 1; j < N; ++j) {
-                if (dist[i][k] != INF && dist[k][j] != INF &&
-                    dist[i][k] + dist[k][j] < dist[i][j]) {
-                    dist[i][j] = dist[i][k] + dist[k][j];
-                    pred[i][j] = pred[k][j];
-                }
-            }
-        }
-    }
+		for (int k = 1; k < N; ++k) {
+			for (int i = 1; i < N; ++i) {
+				for (int j = 1; j < N; ++j) {
+					if (dist[i][k] != INF && dist[k][j] != INF &&
+						dist[i][k] + dist[k][j] < dist[i][j]) {
+						dist[i][j] = dist[i][k] + dist[k][j];
+						pred[i][j] = pred[k][j];
+					}
+				}
+			}
+		}
 
-    // Impressão da matriz de caminhos mais curtos (dist)
-    cout << "\nMatriz de caminhos mais curtos (dist[i][j]):\n";
-    for (int i = 1; i < N; ++i) {
-        for (int j = 1; j < N; ++j) {
-            if (dist[i][j] == INF) cout << "INF ";
-            else cout << dist[i][j] << " ";
-        }
-        cout << endl;
-    }
+		// Impressão da matriz de caminhos mais curtos (dist)
+		cout << "\nMatriz de caminhos mais curtos (dist[i][j]):\n";
+		for (int i = 1; i < N; ++i) {
+			for (int j = 1; j < N; ++j) {
+				if (dist[i][j] == INF) cout << "INF ";
+				else cout << dist[i][j] << " ";
+			}
+			cout << endl;
+		}
 
-    // Impressão da matriz de predecessores (pred)
-    cout << "\nMatriz de predecessores (pred[i][j]):\n";
-    for (int i = 1; i < N; ++i) {
-        for (int j = 1; j < N; ++j) {
-            cout << pred[i][j] << " ";
-        }
-        cout << endl;
-    }
+		// Impressão da matriz de predecessores (pred)
+		cout << "\nMatriz de predecessores (pred[i][j]):\n";
+		for (int i = 1; i < N; ++i) {
+			for (int j = 1; j < N; ++j) {
+				cout << pred[i][j] << " ";
+			}
+			cout << endl;
+		}
 
-    // Estatísticas
-    double densidade = calcularDensidade(grafo.numVertices, grafo.arestas.size(), grafo.arcos.size());
-    int grauMin, grauMax;
-    calcularGraus(grafo, grafo.numVertices, grauMin, grauMax);
-    int componentes = calcularComponentesConectados(grafo, grafo.numVertices);
-    pair<double, int> res = calcularCaminhoMedioDiametro(dist, grafo.numVertices);
-    vector<int> intermediacao = calcularIntermediacao(pred, dist, grafo.numVertices);
+		// Estatísticas
+		double densidade = calcularDensidade(grafo.numVertices, grafo.arestas.size(), grafo.arcos.size());
+		int grauMin, grauMax;
+		calcularGraus(grafo, grafo.numVertices, grauMin, grauMax);
+		int componentes = calcularComponentesConectados(grafo, grafo.numVertices);
+		pair<double, int> res = calcularCaminhoMedioDiametro(dist, grafo.numVertices);
+		vector<int> intermediacao = calcularIntermediacao(pred, dist, grafo.numVertices);
 
-    // Exibir resultados
-    exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
+		// Exibir resultados
+		exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
+	
+		cout << endl << endl << "Digite o nome do arquivo: ";
+		cin >> nomeArquivo;
+	}
 
     return 0;
 }

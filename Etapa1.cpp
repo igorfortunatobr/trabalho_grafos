@@ -125,8 +125,46 @@ void calcularEstatisticas(const Grafo& grafo) {
     cout << "Grau maximo: " << grauMax << endl;
 }
 
+void calcularEstatisticasAvancadas(const vector<vector<int>>& dist, const vector<vector<int>>& pred, int V) {
+    const int INF = numeric_limits<int>::max();
+    int totalDistancia = 0;
+    int paresValidos = 0;
+    int diametro = 0;
+    vector<int> inter(V + 1, 0);
+
+    for (int s = 1; s <= V; ++s) {
+        for (int t = 1; t <= V; ++t) {
+            if (s != t && dist[s][t] != INF) {
+                totalDistancia += dist[s][t];
+                paresValidos++;
+                diametro = max(diametro, dist[s][t]);
+
+                int atual = t;
+                while (pred[s][atual] != -1 && pred[s][atual] != s) {
+                    inter[pred[s][atual]]++;
+                    atual = pred[s][atual];
+                }
+            }
+        }
+    }
+
+    cout << "\n=== Estatisticas Avancadas ===" << endl;
+    cout << "Caminho medio: ";
+    if (paresValidos > 0)
+        cout << (double)totalDistancia / paresValidos << endl;
+    else
+        cout << "Indefinido (grafo desconexo)" << endl;
+
+    cout << "Diametro: " << diametro << endl;
+
+    cout << "Intermediacao (frequencia nos caminhos minimos):" << endl;
+    for (int i = 1; i <= V; ++i) {
+        cout << "Vertice " << i << ": " << inter[i] << endl;
+    }
+}
+
 int main() {
-    ifstream arquivo("BHW1.dat");
+    ifstream arquivo("TESTE.dat");
     if (!arquivo.is_open()) {
         cerr << "Erro ao abrir o arquivo!" << endl;
         return 1;
@@ -287,6 +325,7 @@ int main() {
     }
 
     calcularEstatisticas(grafo);
+    calcularEstatisticasAvancadas(dist, pred, grafo.numVertices);
 
     return 0;
 }

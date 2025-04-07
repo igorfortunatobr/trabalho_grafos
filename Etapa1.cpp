@@ -178,6 +178,117 @@ void exibirEstatisticasFormatadas(
     cout << "13. Diametro: " << diametro << endl;
 }
 
+// Função para traduzir caracteres especiais em caracteres permitidos pelo JSON
+// (Para não ocorrer problema de formatação do JSON na hora de ler no código Python)
+string ajustarJSON(const string& jsonEntrada) {
+    string jsonSaida;
+    for (char c : jsonEntrada) {
+        if (c == '\"')
+            jsonSaida += "\\\"";
+        else if (c == '\\')
+            jsonSaida += "\\\\";
+        else if (c == '\n')
+            jsonSaida += "\\n";
+        else if (c == '\r')
+            jsonSaida += "\\r";
+        else if (c == '\t')
+            jsonSaida += "\\t";
+        else
+            jsonSaida.push_back(c);
+    }
+    return jsonSaida;
+}
+
+// Gera a representação do grafo em formato DOT (Formato reconhecido pela biblioteca "pydot")
+string gerarGrafoDOT(const Grafo &grafo) {
+    stringstream ss;
+    ss << "digraph G {" << "\n";
+    for (const Vertice &v : grafo.vertices) {
+        ss << "\t" << v.id << " [label=\"" << v.id << "\"];" << "\n";
+    }
+    for (const Aresta &a : grafo.arestas) {
+        ss << "\t" << a.origem << " -> " << a.destino 
+           << " [dir=both, arrowtail=none, arrowhead=none, label=\"" 
+           << a.custoTransito << "\"];" << "\n";
+    }
+    for (const Arco &a : grafo.arcos) {
+        ss << "\t" << a.origem << " -> " << a.destino 
+           << " [label=\"" << a.custoTransito << "\"];" << "\n";
+    }
+    ss << "}" << "\n";
+    return ss.str();
+}
+
+// Método que salva estatísticas e o desenho do grafo em um arquivo JSON
+/*
+ * Exemplo de formato de JSON esperado pelo código em python
+ * {
+  "estatisticas": {
+    "numVertices": 2,
+    "numArestas": 1,
+    "numArcos": 0,
+    "numVerticesRequeridos": 1,
+    "numArestasRequeridas": 1,
+    "numArcosRequeridos": 0,
+    "densidade": 1.0,
+    "componentes": 1,
+    "grauMin": 1,
+    "grauMax": 1,
+    "caminhoMedio": 10.0,
+    "diametro": 10,
+    "intermediacao": [0, 0, 0]
+  },
+  "grafo_dot": "digraph G {\\n  1 [label=\"1\"];\\n  2 [label=\"2\"];\\n  1 -> 2 [dir=both, arrowtail=none, arrowhead=none, label=\"10\"];\\n}"
+}
+ * 
+ * 
+ * */
+void salvarEmArquivo(const Grafo& grafo, double densidade, int componentes,
+                          int grauMin, int grauMax, double caminhoMedio, int diametro,
+                          const vector<int>& intermediacao, const string& nomeArquivo) {
+    ofstream arquivoSaida(nomeArquivo);
+    if (!arquivoSaida.is_open()) {
+        cerr << "Erro ao abrir o arquivo de saída!" << endl;
+        return;
+    }
+    
+    // Gerar a string DOT do grafo
+    string dotString = gerarGrafoDOT(grafo);
+    // ajustar os caracteres especiais para que o JSON seja válido
+    string dotEscapado = ajustarJSON(dotString);
+    
+    // Salvar as informações em formato JSON (montagem manual)
+    arquivoSaida << "{" << "\n";
+    arquivoSaida << "  \"estatisticas\": {" << "\n";
+    arquivoSaida << "    \"numVertices\": " << grafo.numVertices << ",\n";
+    arquivoSaida << "    \"numArestas\": " << grafo.arestas.size() << ",\n";
+    arquivoSaida << "    \"numArcos\": " << grafo.arcos.size() << ",\n";
+    arquivoSaida << "    \"numVerticesRequeridos\": " << grafo.numVerticesRequeridos << ",\n";
+    arquivoSaida << "    \"numArestasRequeridas\": " << grafo.numArestasRequeridas << ",\n";
+    arquivoSaida << "    \"numArcosRequeridos\": " << grafo.numArcosRequeridos << ",\n";
+    arquivoSaida << "    \"densidade\": " << densidade << ",\n";
+    arquivoSaida << "    \"componentes\": " << componentes << ",\n";
+    arquivoSaida << "    \"grauMin\": " << grauMin << ",\n";
+    arquivoSaida << "    \"grauMax\": " << grauMax << ",\n";
+    arquivoSaida << "    \"caminhoMedio\": " << caminhoMedio << ",\n";
+    arquivoSaida << "    \"diametro\": " << diametro << ",\n";
+    arquivoSaida << "    \"intermediacao\": [";
+    // Supondo que o índice 0 não seja utilizado
+    for (size_t i = 1; i < intermediacao.size(); ++i) {
+        arquivoSaida << intermediacao[i];
+        if (i < intermediacao.size() - 1) {
+            arquivoSaida << ", ";
+        }
+    }
+    arquivoSaida << "]\n";
+    arquivoSaida << "  },\n";
+    arquivoSaida << "  \"grafo_dot\": \"" << dotEscapado << "\"\n";
+    arquivoSaida << "}" << "\n";
+    
+    arquivoSaida.close();
+    cout << "\nTodas as informacoes foram salvas em: " << nomeArquivo << endl;
+}
+
 // === Função Principal ===
 
 int main() {

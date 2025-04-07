@@ -340,6 +340,10 @@ int main() {
 
 		// Exibir resultados
 		exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
+		
+		
+		salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, "estatisticas.json");
+
 	
 		cout << endl << endl << "Digite o nome do arquivo: ";
 		cin >> nomeArquivo;

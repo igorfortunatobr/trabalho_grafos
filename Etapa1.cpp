@@ -8,6 +8,8 @@
 
 using namespace std;
 
+const int INF = numeric_limits<int>::max();
+
 struct Vertice {
     int id;
     bool requerServico = false;
@@ -66,9 +68,15 @@ int extrairValorInteiro(const string& linha) {
     }
 }
 
-double calcularDensidade(int V, int E, int A) {
+/*
+ * V = Qtd. Vertices
+ * E = Qtd. Arestas
+ * A = Qtd. Arcos
+ * */
+double calcularDensidade(int V, int E, int A, bool ehDirecionado) {
     if (V <= 1) return 0.0;
-    return static_cast<double>(2 * E + A) / (V * (V - 1));
+    
+	return static_cast<double>((2 * E) + A) / (V * (V - 1));
 }
 
 void calcularGraus(const Grafo& grafo, int V, int& grauMin, int& grauMax) {
@@ -120,7 +128,6 @@ int calcularComponentesConectados(const Grafo& grafo, int V) {
 }
 
 pair<double, int> calcularCaminhoMedioDiametro(const vector<vector<int>>& dist, int V) {
-    const int INF = numeric_limits<int>::max();
     int total = 0, pares = 0, diametro = 0;
 
     for (int i = 1; i <= V; ++i) {
@@ -137,7 +144,6 @@ pair<double, int> calcularCaminhoMedioDiametro(const vector<vector<int>>& dist, 
 }
 
 vector<int> calcularIntermediacao(const vector<vector<int>>& pred, const vector<vector<int>>& dist, int V) {
-    const int INF = numeric_limits<int>::max();
     vector<int> inter(V + 1, 0);
 
     for (int s = 1; s <= V; ++s) {
@@ -207,6 +213,7 @@ string gerarGrafoDOT(const Grafo &grafo) {
         ss << "\t" << v.id << " [label=\"" << v.id << "\"];" << "\n";
     }
     for (const Aresta &a : grafo.arestas) {
+			cout << a.origem << " | " << a.destino << endl;
         ss << "\t" << a.origem << " -> " << a.destino 
            << " [dir=both, arrowtail=none, arrowhead=none, label=\"" 
            << a.custoTransito << "\"];" << "\n";
@@ -259,7 +266,8 @@ void salvarEmArquivo(const Grafo& grafo, double densidade, int componentes,
     
     // Salvar as informações em formato JSON (montagem manual)
     arquivoSaida << "{" << "\n";
-    arquivoSaida << "  \"estatisticas\": {" << "\n";
+    arquivoSaida << "    \"estatisticas\": {" << "\n";
+    arquivoSaida << "    \"nome\": \"" << grafo.nome << "\",\n";
     arquivoSaida << "    \"numVertices\": " << grafo.numVertices << ",\n";
     arquivoSaida << "    \"numArestas\": " << grafo.arestas.size() << ",\n";
     arquivoSaida << "    \"numArcos\": " << grafo.arcos.size() << ",\n";
@@ -273,7 +281,8 @@ void salvarEmArquivo(const Grafo& grafo, double densidade, int componentes,
     arquivoSaida << "    \"caminhoMedio\": " << caminhoMedio << ",\n";
     arquivoSaida << "    \"diametro\": " << diametro << ",\n";
     arquivoSaida << "    \"intermediacao\": [";
-    // Supondo que o índice 0 não seja utilizado
+
+
     for (size_t i = 1; i < intermediacao.size(); ++i) {
         arquivoSaida << intermediacao[i];
         if (i < intermediacao.size() - 1) {
@@ -310,6 +319,9 @@ int main() {
 		// Leitura do cabeçalho
 		getline(arquivo, linha); 
 		grafo.nome = linha.substr(linha.find(":") + 1);
+		// Remover espaço em branco antes do nome
+		grafo.nome = grafo.nome.substr(grafo.nome.find("		") + 2);
+		
 		getline(arquivo, linha); 
 		grafo.valorOtimo = extrairValorInteiro(linha);
 		getline(arquivo, linha); 
@@ -388,7 +400,8 @@ int main() {
 		}
 
 		// Algoritmo de Floyd-Warshall
-		const int INF = numeric_limits<int>::max();
+		
+		bool ehDirecionado = grafo.arcos.size() > 0;
 		int N = grafo.numVertices + 1;
 		vector<vector<int>> dist(N, vector<int>(N, INF));
 		vector<vector<int>> pred(N, vector<int>(N, -1));
@@ -442,7 +455,7 @@ int main() {
 		}
 
 		// Estatísticas
-		double densidade = calcularDensidade(grafo.numVertices, grafo.arestas.size(), grafo.arcos.size());
+		double densidade = calcularDensidade(grafo.numVertices, grafo.arestas.size(), grafo.arcos.size(), ehDirecionado);
 		int grauMin, grauMax;
 		calcularGraus(grafo, grafo.numVertices, grauMin, grauMax);
 		int componentes = calcularComponentesConectados(grafo, grafo.numVertices);
@@ -453,7 +466,7 @@ int main() {
 		exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
 		
 		
-		salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, "estatisticas.json");
+		salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, "estatisticas_" + grafo.nome + ".json");
 
 	
 		cout << endl << endl << "Digite o nome do arquivo: ";

@@ -1,0 +1,19 @@
+{
+    "estatisticas": {
+    "nome": "BHW1",
+    "numVertices": 12,
+    "numArestas": 11,
+    "numArcos": 22,
+    "numVerticesRequeridos": 7,
+    "numArestasRequeridas": 11,
+    "numArcosRequeridos": 11,
+    "densidade": 0.333333,
+    "componentes": 1,
+    "grauMin": 4,
+    "grauMax": 10,
+    "caminhoMedio": 16.7121,
+    "diametro": 30,
+    "intermediacao": [18, 22, 6, 0, 14, 38, 22, 16, 14, 6, 0, 22]
+  },
+  "grafo_dot": "digraph G {\n\t4 [label=\"4\"];\n\t3 [label=\"3\"];\n\t10 [label=\"10\"];\n\t2 [label=\"2\"];\n\t11 [label=\"11\"];\n\t12 [label=\"12\"];\n\t7 [label=\"7\"];\n\t2 -> 3 [dir=both, arrowtail=none, arrowhead=none, label=\"18\"];\n\t2 -> 4 [dir=both, arrowtail=none, arrowhead=none, label=\"9\"];\n\t2 -> 9 [dir=both, arrowtail=none, arrowhead=none, label=\"2\"];\n\t5 -> 6 [dir=both, arrowtail=none, arrowhead=none, label=\"7\"];\n\t5 -> 11 [dir=both, arrowtail=none, arrowhead=none, label=\"20\"];\n\t5 -> 12 [dir=both, arrowtail=none, arrowhead=none, label=\"11\"];\n\t7 -> 8 [dir=both, arrowtail=none, arrowhead=none, label=\"8\"];\n\t7 -> 12 [dir=both, arrowtail=none, arrowhead=none, label=\"18\"];\n\t8 -> 11 [dir=both, arrowtail=none, arrowhead=none, label=\"10\"];\n\t9 -> 10 [dir=both, arrowtail=none, arrowhead=none, label=\"16\"];\n\t10 -> 11 [dir=both, arrowtail=none, arrowhead=none, label=\"12\"];\n\t1 -> 2 [label=\"13\"];\n\t1 -> 4 [label=\"17\"];\n\t1 -> 7 [label=\"19\"];\n\t1 -> 10 [label=\"19\"];\n\t1 -> 12 [label=\"4\"];\n\t3 -> 4 [label=\"20\"];\n\t5 -> 3 [label=\"5\"];\n\t7 -> 6 [label=\"4\"];\n\t12 -> 6 [label=\"3\"];\n\t8 -> 10 [label=\"3\"];\n\t9 -> 11 [label=\"14\"];\n\t2 -> 1 [label=\"13\"];\n\t4 -> 1 [label=\"17\"];\n\t7 -> 1 [label=\"19\"];\n\t10 -> 1 [label=\"19\"];\n\t12 -> 1 [label=\"4\"];\n\t4 -> 3 [label=\"20\"];\n\t3 -> 5 [label=\"5\"];\n\t6 -> 7 [label=\"4\"];\n\t6 -> 12 [label=\"3\"];\n\t10 -> 8 [label=\"3\"];\n\t11 -> 9 [label=\"14\"];\n}\n"
+}

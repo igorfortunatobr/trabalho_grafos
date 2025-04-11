@@ -69,31 +69,41 @@ int main() {
     cout << "Digite o nome do arquivo: ";
 	cin >> nomeArquivo;
     while (nomeArquivo != "") {
+		
+		bool conseguiuLerArquivo = false;
+		
+		
+        Grafo grafo = lerArquivo(nomeArquivo, conseguiuLerArquivo);
+        
+        if (conseguiuLerArquivo)
+        {
 
-        Grafo grafo = lerArquivo(nomeArquivo);
+			bool ehDirecionado = !grafo.arcos.empty();
+			int N = grafo.numVertices + 1;
 
-        bool ehDirecionado = !grafo.arcos.empty();
-        int N = grafo.numVertices + 1;
+			vector<vector<int>> dist(N, vector<int>(N, INF));
+			vector<vector<int>> pred(N, vector<int>(N, -1));
 
-        vector<vector<int>> dist(N, vector<int>(N, INF));
-        vector<vector<int>> pred(N, vector<int>(N, -1));
+			floydWarshall(grafo, N, dist, pred);
 
-        floydWarshall(grafo, N, dist, pred);
+			exibirMatrizDist(dist, grafo.numVertices);
+			exibirMatrizPred(pred, grafo.numVertices);
 
-		exibirMatrizDist(dist, grafo.numVertices);
-		exibirMatrizPred(pred, grafo.numVertices);
+			double densidade = calcularDensidade(grafo.numVertices, grafo.arestas.size(), grafo.arcos.size(), ehDirecionado);
+			int grauMin, grauMax;
+			calcularGraus(grafo, grafo.numVertices, grauMin, grauMax);
+			int componentes = calcularComponentesConectados(grafo, grafo.numVertices);
+			pair<double, int> res = calcularCaminhoMedioDiametro(dist, grafo.numVertices);
+			vector<int> intermediacao = calcularIntermediacao(pred, dist, grafo.numVertices);
 
-        double densidade = calcularDensidade(grafo.numVertices, grafo.arestas.size(), grafo.arcos.size(), ehDirecionado);
-        int grauMin, grauMax;
-        calcularGraus(grafo, grafo.numVertices, grauMin, grauMax);
-        int componentes = calcularComponentesConectados(grafo, grafo.numVertices);
-        pair<double, int> res = calcularCaminhoMedioDiametro(dist, grafo.numVertices);
-        vector<int> intermediacao = calcularIntermediacao(pred, dist, grafo.numVertices);
+			exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
 
-        exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
-
-        string saida = "estatisticas/estatisticas_" + grafo.nome + ".json";
-        salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, saida, dist, pred);
+			string saida = "estatisticas/estatisticas_" + grafo.nome + ".json";
+			salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, saida, dist, pred);
+		} else
+		{
+			cerr << "Erro ao abrir o arquivo!" << endl;
+		}
 
         cout << "\nDigite o nome do arquivo: ";
 		cin >> nomeArquivo;

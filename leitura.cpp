@@ -16,13 +16,14 @@ int extrairValorInteiro(const string& linha) {
     }
 }
 
-Grafo lerArquivo(const string& nomeArquivo) {
+Grafo lerArquivo(const string& nomeArquivo, bool& conseguiuLerArquivo) {
     ifstream arquivo("./instancias/" + nomeArquivo);
     Grafo grafo;
     if (!arquivo.is_open()) {
-        cerr << "Erro ao abrir o arquivo!" << endl;
         return grafo;
     }
+    
+    conseguiuLerArquivo = true;
 
     string linha;
     getline(arquivo, linha); grafo.nome = linha.substr(linha.find(":") + 1);

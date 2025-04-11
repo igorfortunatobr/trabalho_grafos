@@ -99,22 +99,44 @@ string ajustarJSON(const string& jsonEntrada) {
     return jsonSaida;
 }
 
-string gerarGrafoDOT(const Grafo& grafo) {
+string gerarGrafoJSON(const Grafo &grafo) {
     stringstream ss;
-    ss << "digraph G {\n";
-    for (const Vertice& v : grafo.vertices) {
-        ss << "\t" << v.id << " [label=\"" << v.id << "\"];\n";
+    ss << "{\n";
+    
+    // Lista de vértices
+    ss << "\t\"vertices\": [\n";
+    for (size_t i = 0; i < grafo.vertices.size(); i++) {
+        ss << "\t\t{ \"id\": " << grafo.vertices[i].id << " }";
+        if (i != grafo.vertices.size() - 1)
+            ss << ",";
+        ss << "\n";
     }
-    for (const Aresta& a : grafo.arestas) {
-        ss << "\t" << a.origem << " -> " << a.destino 
-           << " [dir=both, arrowtail=none, arrowhead=none, label=\"" 
-           << a.custoTransito << "\"];\n";
+    ss << "\t],\n";
+    
+    // Lista de arestas (caminhos não direcionados)
+    ss << "\t\"arestas\": [\n";
+    for (size_t i = 0; i < grafo.arestas.size(); i++) {
+        ss << "\t\t{ \"origem\": " << grafo.arestas[i].origem 
+           << ", \"destino\": " << grafo.arestas[i].destino 
+           << ", \"custoTransito\": " << grafo.arestas[i].custoTransito << " }";
+        if (i != grafo.arestas.size() - 1)
+            ss << ",";
+        ss << "\n";
     }
-    for (const Arco& a : grafo.arcos) {
-        ss << "\t" << a.origem << " -> " << a.destino 
-           << " [label=\"" << a.custoTransito << "\"];\n";
+    ss << "\t],\n";
+    
+    // Lista de arcos (caminhos direcionados)
+    ss << "\t\"arcos\": [\n";
+    for (size_t i = 0; i < grafo.arcos.size(); i++) {
+        ss << "\t\t{ \"origem\": " << grafo.arcos[i].origem 
+           << ", \"destino\": " << grafo.arcos[i].destino 
+           << ", \"custoTransito\": " << grafo.arcos[i].custoTransito << " }";
+        if (i != grafo.arcos.size() - 1)
+            ss << ",";
+        ss << "\n";
     }
-    ss << "}";
+    ss << "\t]\n";
+    ss << "}\n";
     return ss.str();
 }
 
@@ -150,8 +172,8 @@ void salvarEmArquivo(const Grafo& grafo, double densidade, int componentes,
         cerr << "Erro ao abrir o arquivo de saída!" << endl;
         return;
     }
-    string dotString = gerarGrafoDOT(grafo);
-    string dotEscapado = ajustarJSON(dotString);
+    string grafoString = gerarGrafoJSON(grafo);
+    string jsonAjustado = ajustarJSON(grafoString);
 
     arquivoSaida << "{\n";
     arquivoSaida << "  \"estatisticas\": {\n";
@@ -175,7 +197,7 @@ void salvarEmArquivo(const Grafo& grafo, double densidade, int componentes,
     }
     arquivoSaida << "]\n";
     arquivoSaida << "  },\n";
-    arquivoSaida << "  \"grafo_dot\": \"" << dotEscapado << "\"\n";
+    arquivoSaida << "  \"grafo_json\": \"" << jsonAjustado << "\"\n";
     arquivoSaida << "}";
     arquivoSaida.close();
     cout << "\nInformacoes salvas em: " << nomeArquivo << endl;

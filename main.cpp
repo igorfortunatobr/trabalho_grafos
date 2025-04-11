@@ -61,7 +61,7 @@ int main() {
         string saida = "estatisticas/estatisticas_" + grafo.nome + ".json";
         salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, saida);
 
-        cout << "\nDigite o nome do arquivo: " << endl;
+        cout << "\nDigite o nome do arquivo: ";
 		cin >> nomeArquivo;
     }
     return 0;

@@ -37,4 +37,4 @@ calcular outros caminhos mais curtos alternativos;
 
 - Após a inicialização, é necessário informar o nome do arquivo, presente na pasta `"instancias"`, no diretório deste repositório.
 
-- Com a geração do arquivo de estatísticas, é possível realizar a visualização das informações geradas através do arquivo `Etapa_1_Visualização.ipynb`.
+- Com a geração do arquivo de estatísticas, é possível realizar a visualização das informações geradas através do arquivo `visualizacao.ipynb`.

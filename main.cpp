@@ -33,6 +33,19 @@ void exibirMatrizPred(const vector<vector<int>>& pred, int V) {
     }
 }
 
+void floydWarshall(int N, vector<vector<int>>& dist, vector<vector<int>>& pred) {
+	for (int k = 1; k < N; ++k) {
+            for (int i = 1; i < N; ++i) {
+                for (int j = 1; j < N; ++j) {
+                    if (dist[i][k] != INF && dist[k][j] != INF && dist[i][k] + dist[k][j] < dist[i][j]) {
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        pred[i][j] = pred[k][j];
+                    }
+                }
+            }
+        }
+}
+
 
 int main() {
     string nomeArquivo;
@@ -65,16 +78,7 @@ int main() {
             pred[a.origem][a.destino] = a.origem;
         }
 
-        for (int k = 1; k < N; ++k) {
-            for (int i = 1; i < N; ++i) {
-                for (int j = 1; j < N; ++j) {
-                    if (dist[i][k] != INF && dist[k][j] != INF && dist[i][k] + dist[k][j] < dist[i][j]) {
-                        dist[i][j] = dist[i][k] + dist[k][j];
-                        pred[i][j] = pred[k][j];
-                    }
-                }
-            }
-        }
+        floydWarshall(N, dist, pred);
 
 		exibirMatrizDist(dist, grafo.numVertices);
 		exibirMatrizPred(pred, grafo.numVertices);
@@ -89,7 +93,7 @@ int main() {
         exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
 
         string saida = "estatisticas/estatisticas_" + grafo.nome + ".json";
-        salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, saida);
+        salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, saida, dist, pred);
 
         cout << "\nDigite o nome do arquivo: ";
 		cin >> nomeArquivo;

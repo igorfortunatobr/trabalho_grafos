@@ -165,13 +165,16 @@ void exibirEstatisticasFormatadas(const Grafo& grafo, double densidade, int comp
 
 void salvarEmArquivo(const Grafo& grafo, double densidade, int componentes,
     int grauMin, int grauMax, double caminhoMedio, int diametro,
-    const vector<int>& intermediacao, const string& nomeArquivo) {
+    const vector<int>& intermediacao, const string& nomeArquivo, 
+    const vector<vector<int>>& dist, const vector<vector<int>>& pred) {
 
     ofstream arquivoSaida(nomeArquivo);
     if (!arquivoSaida.is_open()) {
         cerr << "Erro ao abrir o arquivo de saída!" << endl;
         return;
     }
+
+    // Gera a string JSON do grafo e a ajusta para ser inclusa no JSON final
     string grafoString = gerarGrafoJSON(grafo);
     string jsonAjustado = ajustarJSON(grafoString);
 
@@ -191,14 +194,58 @@ void salvarEmArquivo(const Grafo& grafo, double densidade, int componentes,
     arquivoSaida << "    \"caminhoMedio\": " << caminhoMedio << ",\n";
     arquivoSaida << "    \"diametro\": " << diametro << ",\n";
     arquivoSaida << "    \"intermediacao\": [";
-    for (size_t i = 1; i < intermediacao.size(); ++i) {
+    for (size_t i = 0; i < intermediacao.size(); ++i) {
         arquivoSaida << intermediacao[i];
-        if (i < intermediacao.size() - 1) arquivoSaida << ", ";
+        if (i < intermediacao.size() - 1) 
+            arquivoSaida << ", ";
     }
     arquivoSaida << "]\n";
-    arquivoSaida << "  },\n";
+    
+    arquivoSaida << "   },\n";
+
+    // Inserção da Matriz de Distância
+    arquivoSaida << "    \"matrizDistancia\": [\n";
+    for (int i = 1; i <= grafo.numVertices; ++i) {
+        arquivoSaida << "      [";
+        for (int j = 1; j <= grafo.numVertices; ++j) {
+            if (dist[i][j] == INF)
+                arquivoSaida << "\"INF\"";
+            else
+                arquivoSaida << dist[i][j];
+            if (j <= grafo.numVertices - 1)
+                arquivoSaida << ", ";
+        }
+        arquivoSaida << "]";
+        if (i <= grafo.numVertices - 1)
+            arquivoSaida << ",\n";
+        else
+            arquivoSaida << "\n";
+    }
+    arquivoSaida << "    ],\n";
+
+    // Inserção da Matriz de Predecessores
+    arquivoSaida << "    \"matrizPredecessores\": [\n";
+    for (int i = 1; i <= grafo.numVertices; ++i) {
+        arquivoSaida << "      [";
+        for (int j = 1; j <= grafo.numVertices; ++j) {
+            if (pred[i][j] == -1)
+                arquivoSaida << "\"NULO\"";
+            else
+                arquivoSaida << pred[i][j];
+            if (j <= grafo.numVertices - 1)
+                arquivoSaida << ", ";
+        }
+        arquivoSaida << "]";
+        if (i <= grafo.numVertices - 1)
+            arquivoSaida << ",\n";
+        else
+            arquivoSaida << "\n";
+    }
+    arquivoSaida << "    ],\n";
+
     arquivoSaida << "  \"grafo_json\": \"" << jsonAjustado << "\"\n";
-    arquivoSaida << "}";
+    arquivoSaida << "}\n";
+
     arquivoSaida.close();
     cout << "\nInformacoes salvas em: " << nomeArquivo << endl;
 }

@@ -33,7 +33,24 @@ void exibirMatrizPred(const vector<vector<int>>& pred, int V) {
     }
 }
 
-void floydWarshall(int N, vector<vector<int>>& dist, vector<vector<int>>& pred) {
+void floydWarshall(Grafo& grafo, int N, vector<vector<int>>& dist, vector<vector<int>>& pred) {
+	for (int i = 1; i < N; ++i) {
+            dist[i][i] = 0;
+            pred[i][i] = i;
+	}
+
+	for (const Aresta& a : grafo.arestas) {
+		dist[a.origem][a.destino] = a.custoTransito;
+		dist[a.destino][a.origem] = a.custoTransito;
+		pred[a.origem][a.destino] = a.origem;
+		pred[a.destino][a.origem] = a.destino;
+	}
+
+	for (const Arco& a : grafo.arcos) {
+		dist[a.origem][a.destino] = a.custoTransito;
+		pred[a.origem][a.destino] = a.origem;
+	}
+	
 	for (int k = 1; k < N; ++k) {
             for (int i = 1; i < N; ++i) {
                 for (int j = 1; j < N; ++j) {
@@ -61,24 +78,7 @@ int main() {
         vector<vector<int>> dist(N, vector<int>(N, INF));
         vector<vector<int>> pred(N, vector<int>(N, -1));
 
-        for (int i = 1; i < N; ++i) {
-            dist[i][i] = 0;
-            pred[i][i] = i;
-        }
-
-        for (const Aresta& a : grafo.arestas) {
-            dist[a.origem][a.destino] = a.custoTransito;
-            dist[a.destino][a.origem] = a.custoTransito;
-            pred[a.origem][a.destino] = a.origem;
-            pred[a.destino][a.origem] = a.destino;
-        }
-
-        for (const Arco& a : grafo.arcos) {
-            dist[a.origem][a.destino] = a.custoTransito;
-            pred[a.origem][a.destino] = a.origem;
-        }
-
-        floydWarshall(N, dist, pred);
+        floydWarshall(grafo, N, dist, pred);
 
 		exibirMatrizDist(dist, grafo.numVertices);
 		exibirMatrizPred(pred, grafo.numVertices);

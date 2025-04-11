@@ -7,6 +7,33 @@
 
 using namespace std;
 
+void exibirMatrizDist(const vector<vector<int>>& dist, int V) {
+    cout << "\nMatriz de distancias (dist[i][j]):\n";
+    for (int i = 1; i <= V; ++i) {
+        for (int j = 1; j <= V; ++j) {
+            if (dist[i][j] == INF)
+                cout << "INF\t";
+            else
+                cout << dist[i][j] << "\t";
+        }
+        cout << endl;
+    }
+}
+
+void exibirMatrizPred(const vector<vector<int>>& pred, int V) {
+    cout << "\nMatriz de predecessores (pred[i][j]):\n";
+    for (int i = 1; i <= V; ++i) {
+        for (int j = 1; j <= V; ++j) {
+            if (pred[i][j] == -1)
+                cout << "NULO\t";
+            else
+                cout << pred[i][j] << "\t";
+        }
+        cout << endl;
+    }
+}
+
+
 int main() {
     string nomeArquivo;
     cout << "Digite o nome do arquivo: ";
@@ -48,6 +75,9 @@ int main() {
                 }
             }
         }
+
+		exibirMatrizDist(dist, grafo.numVertices);
+		exibirMatrizPred(pred, grafo.numVertices);
 
         double densidade = calcularDensidade(grafo.numVertices, grafo.arestas.size(), grafo.arcos.size(), ehDirecionado);
         int grauMin, grauMax;

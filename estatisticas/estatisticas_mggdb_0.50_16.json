@@ -1,0 +1,39 @@
+{
+  "estatisticas": {
+    "nome": "mggdb_0.50_16",
+    "numVertices": 8,
+    "numArestas": 7,
+    "numArcos": 42,
+    "numVerticesRequeridos": 6,
+    "numArestasRequeridas": 3,
+    "numArcosRequeridos": 10,
+    "densidade": 1,
+    "componentes": 1,
+    "grauMin": 10,
+    "grauMax": 14,
+    "caminhoMedio": 3.35714,
+    "diametro": 6,
+    "intermediacao": [0, 4, 0, 4, 2, 0, 2, 0, 6]
+   },
+    "matrizDistancia": [
+      [0, 4, 1, 2, 4, 4, 2, 1],
+      [4, 0, 3, 4, 4, 2, 6, 4],
+      [1, 3, 0, 3, 3, 4, 3, 2],
+      [2, 4, 3, 0, 6, 2, 4, 1],
+      [4, 4, 3, 6, 0, 6, 2, 5],
+      [4, 2, 4, 2, 6, 0, 6, 3],
+      [2, 6, 3, 4, 2, 6, 0, 3],
+      [1, 4, 2, 1, 5, 3, 3, 0]
+    ],
+    "matrizPredecessores": [
+      [1, 1, 1, 8, 3, 8, 1, 1],
+      [2, 2, 2, 6, 2, 2, 2, 2],
+      [3, 3, 3, 8, 3, 3, 1, 3],
+      [8, 6, 8, 4, 4, 4, 4, 4],
+      [3, 5, 5, 5, 5, 5, 5, 3],
+      [8, 6, 6, 6, 6, 6, 4, 6],
+      [7, 7, 1, 7, 7, 4, 7, 1],
+      [8, 8, 8, 8, 3, 8, 1, 8]
+    ],
+  "grafo_json": "{\n\t\"vertices\": [\n\t\t{ \"id\": 2 },\n\t\t{ \"id\": 3 },\n\t\t{ \"id\": 4 },\n\t\t{ \"id\": 5 },\n\t\t{ \"id\": 6 },\n\t\t{ \"id\": 7 }\n\t],\n\t\"arestas\": [\n\t\t{ \"origem\": 1, \"destino\": 3, \"custoTransito\": 1 },\n\t\t{ \"origem\": 1, \"destino\": 7, \"custoTransito\": 2 },\n\t\t{ \"origem\": 4, \"destino\": 7, \"custoTransito\": 4 },\n\t\t{ \"origem\": 3, \"destino\": 8, \"custoTransito\": 2 },\n\t\t{ \"origem\": 1, \"destino\": 5, \"custoTransito\": 6 },\n\t\t{ \"origem\": 1, \"destino\": 2, \"custoTransito\": 4 },\n\t\t{ \"origem\": 2, \"destino\": 5, \"custoTransito\": 4 }\n\t],\n\t\"arcos\": [\n\t\t{ \"origem\": 1, \"destino\": 6, \"custoTransito\": 6 },\n\t\t{ \"origem\": 4, \"destino\": 5, \"custoTransito\": 6 },\n\t\t{ \"origem\": 2, \"destino\": 4, \"custoTransito\": 6 },\n\t\t{ \"origem\": 1, \"destino\": 8, \"custoTransito\": 1 },\n\t\t{ \"origem\": 3, \"destino\": 7, \"custoTransito\": 8 },\n\t\t{ \"origem\": 1, \"destino\": 4, \"custoTransito\": 3 },\n\t\t{ \"origem\": 3, \"destino\": 6, \"custoTransito\": 4 },\n\t\t{ \"origem\": 4, \"destino\": 8, \"custoTransito\": 1 },\n\t\t{ \"origem\": 6, \"destino\": 8, \"custoTransito\": 3 },\n\t\t{ \"origem\": 2, \"destino\": 8, \"custoTransito\": 4 },\n\t\t{ \"origem\": 4, \"destino\": 6, \"custoTransito\": 2 },\n\t\t{ \"origem\": 5, \"destino\": 7, \"custoTransito\": 2 },\n\t\t{ \"origem\": 5, \"destino\": 8, \"custoTransito\": 8 },\n\t\t{ \"origem\": 3, \"destino\": 5, \"custoTransito\": 3 },\n\t\t{ \"origem\": 2, \"destino\": 7, \"custoTransito\": 6 },\n\t\t{ \"origem\": 2, \"destino\": 3, \"custoTransito\": 3 },\n\t\t{ \"origem\": 3, \"destino\": 4, \"custoTransito\": 7 },\n\t\t{ \"origem\": 6, \"destino\": 7, \"custoTransito\": 8 },\n\t\t{ \"origem\": 5, \"destino\": 6, \"custoTransito\": 6 },\n\t\t{ \"origem\": 2, \"destino\": 6, \"custoTransito\": 2 },\n\t\t{ \"origem\": 7, \"destino\": 8, \"custoTransito\": 7 },\n\t\t{ \"origem\": 6, \"destino\": 4, \"custoTransito\": 2 },\n\t\t{ \"origem\": 7, \"destino\": 5, \"custoTransito\": 2 },\n\t\t{ \"origem\": 8, \"destino\": 5, \"custoTransito\": 8 },\n\t\t{ \"origem\": 5, \"destino\": 3, \"custoTransito\": 3 },\n\t\t{ \"origem\": 7, \"destino\": 2, \"custoTransito\": 6 },\n\t\t{ \"origem\": 3, \"destino\": 2, \"custoTransito\": 3 },\n\t\t{ \"origem\": 4, \"destino\": 3, \"custoTransito\": 7 },\n\t\t{ \"origem\": 7, \"destino\": 6, \"custoTransito\": 8 },\n\t\t{ \"origem\": 6, \"destino\": 5, \"custoTransito\": 6 },\n\t\t{ \"origem\": 6, \"destino\": 2, \"custoTransito\": 2 },\n\t\t{ \"origem\": 8, \"destino\": 7, \"custoTransito\": 7 },\n\t\t{ \"origem\": 6, \"destino\": 1, \"custoTransito\": 6 },\n\t\t{ \"origem\": 5, \"destino\": 4, \"custoTransito\": 6 },\n\t\t{ \"origem\": 4, \"destino\": 2, \"custoTransito\": 6 },\n\t\t{ \"origem\": 8, \"destino\": 1, \"custoTransito\": 1 },\n\t\t{ \"origem\": 7, \"destino\": 3, \"custoTransito\": 8 },\n\t\t{ \"origem\": 4, \"destino\": 1, \"custoTransito\": 3 },\n\t\t{ \"origem\": 6, \"destino\": 3, \"custoTransito\": 4 },\n\t\t{ \"origem\": 8, \"destino\": 4, \"custoTransito\": 1 },\n\t\t{ \"origem\": 8, \"destino\": 6, \"custoTransito\": 3 },\n\t\t{ \"origem\": 8, \"destino\": 2, \"custoTransito\": 4 }\n\t]\n}\n"
+}

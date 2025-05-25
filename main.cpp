@@ -4,6 +4,8 @@
 #include <string>
 #include "leitura.cpp"
 #include "estatisticas.cpp"
+#include "colonia_formigas.cpp"
+#include "arquivosInstancia.hpp"
 
 using namespace std;
 
@@ -66,9 +68,13 @@ void floydWarshall(Grafo& grafo, int N, vector<vector<int>>& dist, vector<vector
 
 int main() {
     string nomeArquivo;
-    cout << "Digite o nome do arquivo: ";
-	cin >> nomeArquivo;
-    while (nomeArquivo != "") {
+
+	int iQtdArquivos = (int)arquivosTrabalho.size();
+	
+    for (int i = 0; i < iQtdArquivos; i++) {
+		nomeArquivo = arquivosTrabalho[i];
+		
+		cout << "Processando arquivo " << nomeArquivo << endl;
 		
 		bool conseguiuLerArquivo = false;
 		
@@ -95,18 +101,44 @@ int main() {
 			int componentes = calcularComponentesConectados(grafo, grafo.numVertices);
 			pair<double, int> res = calcularCaminhoMedioDiametro(dist, grafo.numVertices);
 			vector<int> intermediacao = calcularIntermediacao(pred, dist, grafo.numVertices);
-
+			
+			cout << "Gerando arquivo de estatisticas" << endl;
+			
 			exibirEstatisticasFormatadas(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao);
 
 			string saida = "estatisticas/estatisticas_" + grafo.nome + ".json";
 			salvarEmArquivo(grafo, densidade, componentes, grauMin, grauMax, res.first, res.second, intermediacao, saida, dist, pred);
+			
+			cout << "Executando solucao inicial" << endl;
+			// medição de clocks para execução do algoritmo
+			clock_t tTempo1 = clock();
+			Solucao solucao = executarACO(grafo, dist);
+			clock_t tTempo2 = clock();
+			long lClockExecucaoReferencia = tTempo2 - tTempo1;
+
+			// aqui usamos o mesmo intervalo só como exemplo:
+			long lClockAcharSolucaoRef = lClockExecucaoReferencia; 
+
+			string nomeArquivoSolucao = "sol-" + nomeArquivo;
+			
+			cout << "Salvando solucao" << endl;
+			
+			salvarSolucaoDat(
+								solucao,
+							    0,
+							    1,
+							    lClockExecucaoReferencia,
+							    lClockAcharSolucaoRef,
+							    nomeArquivoSolucao
+			);
+
+			cout << "Solucao salva em " + nomeArquivoSolucao << endl;
+			
 		} else
 		{
 			cerr << "Erro ao abrir o arquivo!" << endl;
 		}
-
-        cout << "\nDigite o nome do arquivo: ";
-		cin >> nomeArquivo;
+		cout << endl;
     }
     return 0;
 }

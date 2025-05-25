@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 vector<string> arquivosTrabalho = {
     "BHW1.dat",
     "BHW2.dat",

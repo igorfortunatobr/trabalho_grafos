@@ -90,34 +90,47 @@ vector<Servico> extrairServicos(const Grafo& grafo) {
     return lista;
 }
 
-// Exemplo simples de twoOpt:
-Rota twoOpt(const Rota& r, const vector<vector<int>>& dist) {
-    Rota best = r;
+// Implementação do 2-Opt para otimizar uma rota
+Rota twoOpt(Rota r, const vector<vector<int>>& dist) { // Passa por valor para modificar cópia
+    if (r.servicos.size() < 2) return r; // Não faz sentido otimizar rotas com 0 ou 1 serviço
+
     bool melhorou = true;
     while (melhorou) {
         melhorou = false;
-        for (int i = 1; i + 2 < (int)best.servicos.size(); ++i) {
-            for (int j = i + 1; j + 1 < (int)best.servicos.size(); ++j) {
-                // calcula ganho de trocar trecho [i..j]
-                int antes = dist[best.servicos[i-1].u][best.servicos[i].u]
-                          + dist[best.servicos[j].u][best.servicos[j+1].u];
-                int depois = dist[best.servicos[i-1].u][best.servicos[j].u]
-                           + dist[best.servicos[i].u][best.servicos[j+1].u];
-                if (depois + 0 < antes) {
-                    reverse(best.servicos.begin()+i, best.servicos.begin()+j+1);
+        // Índices i e j representam os *serviços* a serem trocados.
+        // A rota completa implicitamente começa e termina no depósito.
+        for (size_t i = 0; i < r.servicos.size() - 1; ++i) {
+            for (size_t j = i + 1; j < r.servicos.size(); ++j) {
+                // Nó antes de i: se i=0, é o depósito, senão é r.servicos[i-1].v
+                int no_antes_i = (i == 0) ? 1 : r.servicos[i - 1].v;
+                // Nó depois de j: se j é o último, é o depósito, senão é r.servicos[j+1].u
+                int no_depois_j = (j == r.servicos.size() - 1) ? 1 : r.servicos[j + 1].u;
+
+                // Custo atual: (antes_i -> i) + (j -> depois_j)
+                int custo_atual = dist[no_antes_i][r.servicos[i].u] + dist[r.servicos[j].v][no_depois_j];
+
+                // Custo após troca: (antes_i -> j) + (i -> depois_j)
+                int custo_novo = dist[no_antes_i][r.servicos[j].u] + dist[r.servicos[i].v][no_depois_j];
+
+                if (custo_novo < custo_atual) {
+                    // Reverte o segmento entre i e j (inclusive)
+                    reverse(r.servicos.begin() + i, r.servicos.begin() + j + 1);
                     melhorou = true;
+                    // Recalcular custo total da rota após a troca (mais seguro)
+                    r.custoTotal = 0;
+                    int no_atual = 1; // Começa no depósito
+                    for(const auto& s : r.servicos) {
+                        r.custoTotal += dist[no_atual][s.u] + s.custo;
+                        no_atual = s.v;
+                    }
+                    r.custoTotal += dist[no_atual][1]; // Volta ao depósito
                 }
-                if (melhorou) break;
+                 if (melhorou) break; // Sai do loop interno j
             }
-            if (melhorou) break;
+             if (melhorou) break; // Sai do loop externo i
         }
     }
-    // Recalcule custoTotal
-    best.custoTotal = 0;
-    for (int k = 0; k + 1 < (int)best.servicos.size(); ++k)
-        best.custoTotal += dist[best.servicos[k].u][best.servicos[k+1].u]
-                         + best.servicos[k+1].custo;
-    return best;
+    return r;
 }
 
 // Construção de solução por uma formiga
@@ -145,8 +158,6 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& dist, ve
             rota.custoTotal += dist[atual][escolhido.u] + escolhido.custo;
             rota.demandaTotal += escolhido.demanda;
             rota.servicos.push_back(escolhido);
-            
-            rota = twoOpt(rota, dist);
 
             for (auto& s : servicos) {
                 if (s.id == escolhido.id) {
@@ -158,6 +169,13 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& dist, ve
         }
 
         rota.custoTotal += dist[atual][grafo.deposito];
+        
+        /*if (rota.servicos.size() > 1) { // twoOpt só faz sentido com pelo menos 2 serviços
+             cout << "DEBUG: Aplicando TwoOpt na rota com " << rota.servicos.size() << " servicos." << endl;
+             rota = twoOpt(rota, dist); // Otimiza a rota construída
+             // O custo total é recalculado dentro de twoOpt
+        }*/
+        
         solucao.custoTotal += rota.custoTotal;
         solucao.rotas.push_back(rota);
     }

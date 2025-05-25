@@ -9,9 +9,10 @@
 #include <iostream>
 using namespace std;
 
-const double ALFA = 1.0; // Influência do feromônio
-const double BETA = 2.0; // Influência da heurística (1/dist)
-const double RHO = 0.5; // Taxa de evaporação
+const double INFLUENCIA_FEROMONIO = 1.0; // Influência do feromônio
+const double INFLUENCIA_HEURISTICA = 2.0; // Influência da heurística (1/dist)
+const double TAXA_EVAPORACAO_FEROMONIO = 0.5; // Taxa de evaporação
+
 const int NUM_FORMIGAS = 10;
 const int NUM_ITERACOES = 100;
 
@@ -19,7 +20,7 @@ const int NUM_ITERACOES = 100;
 // Representa um serviço (nó, aresta ou arco requerido)
 struct Servico {
     int id;
-    int u, v; // extremidades
+    int iVertice1, iVertice2; // extremidades
     int demanda;
     int custo;
     bool atendido;
@@ -27,7 +28,7 @@ struct Servico {
 
 // Representa uma rota construída por uma formiga
 struct Rota {
-    vector<Servico> servicos;
+    vector<Servico> vsServicos;
     int demandaTotal = 0;
     int custoTotal = 0;
 };
@@ -35,148 +36,102 @@ struct Rota {
 // Representa a solução de uma formiga (um conjunto de rotas)
 struct Solucao {
     vector<Rota> rotas;
-    int custoTotal = 0;
+    int iCustoTotal = 0;
 };
 
 // Função heurística (quanto menor a distância, melhor)
-double heuristica(int dist) {
-    return dist > 0 ? 1.0 / dist : 0.0001;
+double heuristica(int distancia) {
+    return distancia > 0 ? 1.0 / distancia : 0.0001;
 }
 
 // Escolhe o próximo serviço baseado em probabilidade
 int escolherProximo(const Servico& atual, const vector<Servico>& candidatos, const vector<vector<double>>& feromonio, const vector<vector<int>>& dist) {
-    vector<double> prob;
+    vector<double> vdProbabilidade;
     double soma = 0;
 
     for (const Servico& s : candidatos) {
-        double f = pow(feromonio[atual.u][s.u], ALFA);
-        double h = pow(heuristica(dist[atual.u][s.u]), BETA);
-        prob.push_back(f * h);
-        soma += prob.back();
+        double f = pow(feromonio[atual.iVertice1][s.iVertice1], INFLUENCIA_FEROMONIO);
+        double h = pow(heuristica(dist[atual.iVertice1][s.iVertice1]), INFLUENCIA_HEURISTICA);
+        vdProbabilidade.push_back(f * h);
+        soma += vdProbabilidade.back();
     }
 
-    // Roleta
-    random_device rd;
-    mt19937 gen(rd());
+    // Roleta para gerar valor aleatório, conforme o conceito do ACO
+    // Cria um gerador de números aleatórios baseado no sistema, usado para inicializar o gerador aleatório com uma semente.
+    random_device geradorSeed;
+    // Inicializa o gerador com a semente gerada pelo random_device
+    mt19937 gen(geradorSeed());
+    // Cria uma distribuição uniforme real no intervalo (0.0, soma), ou seja, todos valores no intervalo tem mesma chance
     uniform_real_distribution<> dis(0.0, soma);
-    double r = dis(gen);
+    double dNumeroAleatorio = dis(gen);
     
-    for (size_t i = 0; i < prob.size(); ++i) {
-        r -= prob[i];
-        if (r <= 0) return i;
+    for (int i = 0; i < (int)vdProbabilidade.size(); ++i) {
+        dNumeroAleatorio -= vdProbabilidade[i];
+        if (dNumeroAleatorio <= 0) return i;
     }
-    return (int)prob.size() - 1;
+    return (int)vdProbabilidade.size() - 1;
 }
 
 // Inicializa a lista de serviços a partir do grafo
 vector<Servico> extrairServicos(const Grafo& grafo) {
-    vector<Servico> lista;
+    vector<Servico> vsLista;
     int id = 1;
     // vértices
-    for (const auto& v : grafo.vertices)
-        if (v.requerServico)
-            lista.push_back({id++, v.id, v.id, v.demanda, v.custoAtendimento, false});
+    for (const auto& vertice : grafo.vertices)
+        if (vertice.requerServico)
+            vsLista.push_back({id++, vertice.id, vertice.id, vertice.demanda, vertice.custoAtendimento, false});
 
     // arestas (use demanda > 0 como critério)
-    for (const auto& e : grafo.arestas)
-        if (e.demanda > 0)
-            lista.push_back({id++, e.origem, e.destino, e.demanda, e.custoAtendimento, false});
+    for (const auto& aresta : grafo.arestas)
+        if (aresta.demanda > 0)
+            vsLista.push_back({id++, aresta.origem, aresta.destino, aresta.demanda, aresta.custoAtendimento, false});
 
     // arcos
-    for (const auto& a : grafo.arcos)
-        if (a.requerServico)  // aqui você já estava marcando corretamente
-            lista.push_back({id++, a.origem, a.destino, a.demanda, a.custoAtendimento, false});
+    for (const auto& arco : grafo.arcos)
+        if (arco.requerServico)  // aqui você já estava marcando corretamente
+            vsLista.push_back({id++, arco.origem, arco.destino, arco.demanda, arco.custoAtendimento, false});
 
-    return lista;
-}
-
-// Implementação do 2-Opt para otimizar uma rota
-Rota twoOpt(Rota r, const vector<vector<int>>& dist) { // Passa por valor para modificar cópia
-    if (r.servicos.size() < 2) return r; // Não faz sentido otimizar rotas com 0 ou 1 serviço
-
-    bool melhorou = true;
-    while (melhorou) {
-        melhorou = false;
-        // Índices i e j representam os *serviços* a serem trocados.
-        // A rota completa implicitamente começa e termina no depósito.
-        for (size_t i = 0; i < r.servicos.size() - 1; ++i) {
-            for (size_t j = i + 1; j < r.servicos.size(); ++j) {
-                // Nó antes de i: se i=0, é o depósito, senão é r.servicos[i-1].v
-                int no_antes_i = (i == 0) ? 1 : r.servicos[i - 1].v;
-                // Nó depois de j: se j é o último, é o depósito, senão é r.servicos[j+1].u
-                int no_depois_j = (j == r.servicos.size() - 1) ? 1 : r.servicos[j + 1].u;
-
-                // Custo atual: (antes_i -> i) + (j -> depois_j)
-                int custo_atual = dist[no_antes_i][r.servicos[i].u] + dist[r.servicos[j].v][no_depois_j];
-
-                // Custo após troca: (antes_i -> j) + (i -> depois_j)
-                int custo_novo = dist[no_antes_i][r.servicos[j].u] + dist[r.servicos[i].v][no_depois_j];
-
-                if (custo_novo < custo_atual) {
-                    // Reverte o segmento entre i e j (inclusive)
-                    reverse(r.servicos.begin() + i, r.servicos.begin() + j + 1);
-                    melhorou = true;
-                    // Recalcular custo total da rota após a troca (mais seguro)
-                    r.custoTotal = 0;
-                    int no_atual = 1; // Começa no depósito
-                    for(const auto& s : r.servicos) {
-                        r.custoTotal += dist[no_atual][s.u] + s.custo;
-                        no_atual = s.v;
-                    }
-                    r.custoTotal += dist[no_atual][1]; // Volta ao depósito
-                }
-                 if (melhorou) break; // Sai do loop interno j
-            }
-             if (melhorou) break; // Sai do loop externo i
-        }
-    }
-    return r;
+    return vsLista;
 }
 
 // Construção de solução por uma formiga
-Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& dist, vector<vector<double>>& feromonio) {
+Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distancias, vector<vector<double>>& feromonio) {
     vector<Servico> servicos = extrairServicos(grafo);
     Solucao solucao;
 
     while (any_of(servicos.begin(), servicos.end(), [](Servico& s){ return !s.atendido; })) {
         Rota rota;
         int atual = grafo.deposito;
-        rota.custoTotal += dist[grafo.deposito][atual];
+        rota.custoTotal += distancias[grafo.deposito][atual];
 
         while (true) {
             vector<Servico> candidatos;
-            for (auto& s : servicos) {
-                if (!s.atendido && rota.demandaTotal + s.demanda <= grafo.capacidadeVeiculo)
-                    candidatos.push_back(s);
+            for (auto& servico : servicos) {
+                if (!servico.atendido && rota.demandaTotal + servico.demanda <= grafo.capacidadeVeiculo)
+                    candidatos.push_back(servico);
             }
             if (candidatos.empty()) break;
 
-            Servico dummy = {0, atual, atual, 0, 0, true};
-            int idx = escolherProximo(dummy, candidatos, feromonio, dist);
-            Servico escolhido = candidatos[idx];
+            Servico servicoFicticioBase = {0, atual, atual, 0, 0, true};
+            int idEscolhido = escolherProximo(servicoFicticioBase, candidatos, feromonio, distancias);
+            Servico servicoEscolhido = candidatos[idEscolhido];
 
-            rota.custoTotal += dist[atual][escolhido.u] + escolhido.custo;
-            rota.demandaTotal += escolhido.demanda;
-            rota.servicos.push_back(escolhido);
+            rota.custoTotal += distancias[atual][servicoEscolhido.iVertice1] + servicoEscolhido.custo;
+            rota.demandaTotal += servicoEscolhido.demanda;
+            rota.vsServicos.push_back(servicoEscolhido);
 
-            for (auto& s : servicos) {
-                if (s.id == escolhido.id) {
-                    s.atendido = true;
+            for (auto& servico : servicos) {
+                if (servico.id == servicoEscolhido.id) {
+                    servico.atendido = true;
                     break;
                 }
             }
-            atual = escolhido.v;
+            atual = servicoEscolhido.iVertice2;
         }
 
-        rota.custoTotal += dist[atual][grafo.deposito];
+        rota.custoTotal += distancias[atual][grafo.deposito];
         
-        /*if (rota.servicos.size() > 1) { // twoOpt só faz sentido com pelo menos 2 serviços
-             cout << "DEBUG: Aplicando TwoOpt na rota com " << rota.servicos.size() << " servicos." << endl;
-             rota = twoOpt(rota, dist); // Otimiza a rota construída
-             // O custo total é recalculado dentro de twoOpt
-        }*/
-        
-        solucao.custoTotal += rota.custoTotal;
+        solucao.iCustoTotal += rota.custoTotal;
         solucao.rotas.push_back(rota);
     }
 
@@ -185,37 +140,37 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& dist, ve
 
 // Função principal do ACO
 Solucao executarACO(const Grafo& grafo, const vector<vector<int>>& dist) {
-    int V = grafo.numVertices + 1;
-    vector<vector<double>> feromonio(V, vector<double>(V, 1.0));
+    int iNumeroVertices = grafo.numVertices + 1;
+    vector<vector<double>> feromonio(iNumeroVertices, vector<double>(iNumeroVertices, 1.0));
 
     Solucao melhorSolucao;
-    melhorSolucao.custoTotal = INF;
+    melhorSolucao.iCustoTotal = INF;
 
-    for (int it = 0; it < NUM_ITERACOES; ++it) {
-        vector<Solucao> populacao;
+    for (int iteracao = 0; iteracao < NUM_ITERACOES; ++iteracao) {
+        vector<Solucao> vsPopulacaoSolucoes;
 
-        for (int f = 0; f < NUM_FORMIGAS; ++f) {
+        for (int formiga = 0; formiga < NUM_FORMIGAS; ++formiga) {
             Solucao solucao = construirSolucao(grafo, dist, feromonio);
-            if (solucao.custoTotal < melhorSolucao.custoTotal) {
+            if (solucao.iCustoTotal < melhorSolucao.iCustoTotal) {
                 melhorSolucao = solucao;
             }
-            populacao.push_back(solucao);
+            vsPopulacaoSolucoes.push_back(solucao);
         }
 
         // Evaporação
-        for (int i = 0; i < V; ++i)
-            for (int j = 0; j < V; ++j)
-                feromonio[i][j] *= (1 - RHO);
+        for (int i = 0; i < iNumeroVertices; ++i)
+            for (int j = 0; j < iNumeroVertices; ++j)
+                feromonio[i][j] *= (1 - TAXA_EVAPORACAO_FEROMONIO);
 
         // Atualiza feromônio com base nas soluções
-        for (const auto& sol : populacao) {
-            for (const auto& rota : sol.rotas) {
+        for (const auto& solucao : vsPopulacaoSolucoes) {
+            for (const auto& rota : solucao.rotas) {
                 int atual = grafo.deposito;
-                for (const auto& s : rota.servicos) {
-                    feromonio[atual][s.u] += 1.0 / sol.custoTotal;
-                    atual = s.v;
+                for (const auto& servico : rota.vsServicos) {
+                    feromonio[atual][servico.iVertice1] += 1.0 / solucao.iCustoTotal;
+                    atual = servico.iVertice2;
                 }
-                feromonio[atual][grafo.deposito] += 1.0 / sol.custoTotal;
+                feromonio[atual][grafo.deposito] += 1.0 / solucao.iCustoTotal;
             }
         }
     }
@@ -229,73 +184,78 @@ void imprimirRota(int index, const Rota& rota) {
               << " | Custo: " << rota.custoTotal
               << " | Demanda total: " << rota.demandaTotal
               << "\n  Servicos:\n";
-    for (const auto& s : rota.servicos) {
-        cout << "    - Serviço " << s.id
-                  << " (" << s.u << "->" << s.v << ")"
-                  << " | Demanda: " << s.demanda
-                  << " | Custo atendimento: " << s.custo
-                  << "\n";
+    for (const auto& servico : rota.vsServicos) {
+        cout << "    - Serviço " << servico.id
+			 << " (" << servico.iVertice1 << "->" << servico.iVertice2 << ")"
+			 << " | Demanda: " << servico.demanda
+			 << " | Custo atendimento: " << servico.custo
+			 << endl;
     }
 }
 
 // Imprime a solução completa
-void imprimirSolucao(const Solucao& sol) {
-    cout << "=== Solucao ACO ===\n";
-    cout << "Custo total da solucao: " << sol.custoTotal << "\n\n";
-    for (size_t i = 0; i < sol.rotas.size(); ++i) {
-        imprimirRota(i, sol.rotas[i]);
-        cout << "\n";
+void imprimirSolucao(const Solucao& sSolucao) {
+    cout << "=== Solucao ACO ===" << endl;
+    cout << "Custo total da solucao: " << sSolucao.iCustoTotal << endl << endl;
+    
+    for (int i = 0; i < (int)sSolucao.rotas.size(); ++i) {
+        imprimirRota(i, sSolucao.rotas[i]);
+        cout << endl;
     }
 }
 
-void salvarSolucaoDat(const Solucao& sol,
-                      int deposito,
-                      int dia,
-                      long clkExecRef,
-                      long clkFindSolRef,
-                      const string& filename)
+void salvarSolucaoDat(
+						 const Solucao& sSolucao,
+						 int iDeposito,
+						 int iDia,
+						 long lClockExecucaoReferencia,
+						 long lClockParaAcharSolucaoRef,
+						 const string& sNomeArquivo
+					 )
 {
 	string sDiretorioSolucao = "./solucoes/";
-    ofstream ofs(sDiretorioSolucao + filename);
+    ofstream ofs(sDiretorioSolucao + sNomeArquivo);
     if (!ofs.is_open()) {
-        cerr << "Erro ao abrir o arquivo para escrita: " << filename << "\n";
+        cerr << "Erro ao abrir o arquivo para escrita: " << sNomeArquivo << "\n";
         return;
     }
 
     // 1) cabeçalho
-    ofs << sol.custoTotal        << "\n"  // custo total da solução
-        << sol.rotas.size()      << "\n"  // total de rotas
-        << clkExecRef            << "\n"  // clocks na execução do alg ref
-        << clkFindSolRef         << "\n"; // clocks até achar solução
+    ofs << sSolucao.iCustoTotal        << "\n"  // custo total da solução
+        << sSolucao.rotas.size()      << "\n"  // total de rotas
+        << lClockExecucaoReferencia   << "\n"  // clocks na execução do alg ref
+        << lClockParaAcharSolucaoRef  << "\n"; // clocks até achar solução
 
     // 2) cada rota
-    for (size_t i = 0; i < sol.rotas.size(); ++i) {
-        const Rota& rota = sol.rotas[i];
+    for (int i = 0; i < (int)sSolucao.rotas.size(); ++i) {
+        const Rota& rota = sSolucao.rotas[i];
+        
         int idRota       = int(i) + 1;
-        int visitas      = int(rota.servicos.size()) + 2; 
+        int visitas      = int(rota.vsServicos.size()) + 2; 
         // +2 porque inclui visita inicial e final ao depósito
 
         // linha básica: depósito, dia, idRota, demanda total, custo total, visitas
-        ofs << " " << deposito << " "
-            << dia       << " "
-            << idRota    << " "
+        ofs << " " 
+			<< iDeposito  		 << " "
+            << iDia       	     << " "
+            << idRota    		 << " "
             << rota.demandaTotal << " "
             << rota.custoTotal   << "  "
             << visitas;
 
         // tripla inicial de depósito
-        ofs << " (D " << deposito << "," << dia << "," << dia << ")";
+        ofs << " (D " << iDeposito << "," << iDia << "," << iDia << ")";
 
         // para cada serviço
-        for (const auto& s : rota.servicos) {
+        for (const auto& servico : rota.vsServicos) {
             ofs << " (S " 
-                << s.id << ","    // identificador do serviço
-                << s.u  << ","    // extremidade de partida
-                << s.v  << ")";   // extremidade de chegada
+                << servico.id << ","    // identificador do serviço
+                << servico.iVertice1  << ","    // extremidade de partida
+                << servico.iVertice2  << ")";   // extremidade de chegada
         }
 
         // tripla final de depósito
-        ofs << " (D " << deposito << "," << dia << "," << dia << ")\n";
+        ofs << " (D " << iDeposito << "," << iDia << "," << iDia << ")\n";
     }
 
     ofs.close();

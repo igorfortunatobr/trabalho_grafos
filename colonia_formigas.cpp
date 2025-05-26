@@ -7,6 +7,8 @@
 #include <fstream>
 #include <chrono>
 #include <iostream>
+#include <map>
+
 using namespace std;
 
 const double INFLUENCIA_FEROMONIO = 1.0; // Influência do feromônio
@@ -45,12 +47,13 @@ double heuristica(int distancia) {
 }
 
 // Escolhe o próximo serviço baseado em probabilidade
-int escolherProximo(const Servico& atual, const vector<Servico>& candidatos, const vector<vector<double>>& feromonio, const vector<vector<int>>& dist) {
+int escolherProximo(const Servico& atual, const vector<Servico>& candidatos, const map<pair<int, int>, double>& feromonio, const vector<vector<int>>& dist) {
     vector<double> vdProbabilidade;
     double soma = 0;
 
     for (const Servico& s : candidatos) {
-        double f = pow(feromonio[atual.iVertice1][s.iVertice1], INFLUENCIA_FEROMONIO);
+        auto chave = make_pair(atual.iVertice2, s.iVertice1);
+		double f = pow(feromonio.at(chave), INFLUENCIA_FEROMONIO);
         double h = pow(heuristica(dist[atual.iVertice1][s.iVertice1]), INFLUENCIA_HEURISTICA);
         vdProbabilidade.push_back(f * h);
         soma += vdProbabilidade.back();
@@ -95,7 +98,7 @@ vector<Servico> extrairServicos(const Grafo& grafo) {
 }
 
 // Construção de solução por uma formiga
-Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distancias, vector<vector<double>>& feromonio) {
+Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distancias, map<pair<int, int>, double>& feromonio) {
     vector<Servico> servicos = extrairServicos(grafo);
     Solucao solucao;
 
@@ -115,6 +118,13 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distanci
             Servico servicoFicticioBase = {0, atual, atual, 0, 0, true};
             int idEscolhido = escolherProximo(servicoFicticioBase, candidatos, feromonio, distancias);
             Servico servicoEscolhido = candidatos[idEscolhido];
+            
+			for (auto& servico : servicos) {
+				if (servico.id == servicoEscolhido.id) {
+					servico.atendido = true;
+					break;
+				}
+			}
 
             rota.custoTotal += distancias[atual][servicoEscolhido.iVertice1] + servicoEscolhido.custo;
             rota.demandaTotal += servicoEscolhido.demanda;
@@ -141,7 +151,11 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distanci
 // Função principal do ACO
 Solucao executarACO(const Grafo& grafo, const vector<vector<int>>& dist) {
     int iNumeroVertices = grafo.numVertices + 1;
-    vector<vector<double>> feromonio(iNumeroVertices, vector<double>(iNumeroVertices, 1.0));
+    map<pair<int, int>, double> feromonio;
+    
+	for (int i = 0; i < iNumeroVertices; ++i)
+		for (int j = 0; j < iNumeroVertices; ++j)
+			feromonio[{i, j}] = 1.0;
 
     Solucao melhorSolucao;
     melhorSolucao.iCustoTotal = INF;
@@ -158,19 +172,18 @@ Solucao executarACO(const Grafo& grafo, const vector<vector<int>>& dist) {
         }
 
         // Evaporação
-        for (int i = 0; i < iNumeroVertices; ++i)
-            for (int j = 0; j < iNumeroVertices; ++j)
-                feromonio[i][j] *= (1 - TAXA_EVAPORACAO_FEROMONIO);
+        for (auto& par : feromonio)
+			par.second *= (1.0 - TAXA_EVAPORACAO_FEROMONIO);
 
         // Atualiza feromônio com base nas soluções
         for (const auto& solucao : vsPopulacaoSolucoes) {
             for (const auto& rota : solucao.rotas) {
                 int atual = grafo.deposito;
                 for (const auto& servico : rota.vsServicos) {
-                    feromonio[atual][servico.iVertice1] += 1.0 / solucao.iCustoTotal;
+                    feromonio[{atual, servico.iVertice1}] += 1.0 / solucao.iCustoTotal;
                     atual = servico.iVertice2;
                 }
-                feromonio[atual][grafo.deposito] += 1.0 / solucao.iCustoTotal;
+                feromonio[{atual, grafo.deposito}] += 1.0 / solucao.iCustoTotal;
             }
         }
     }

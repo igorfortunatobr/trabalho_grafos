@@ -99,7 +99,7 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distanci
     vector<Servico> servicos = extrairServicos(grafo);
     Solucao solucao;
 
-    while (any_of(servicos.begin(), servicos.end(), [](Servico& s){ return !s.atendido; })) {
+    while (any_of(servicos.begin(), servicos.end(), [](Servico& servico){ return !servico.atendido; })) {
         Rota rota;
         int atual = grafo.deposito;
         rota.custoTotal += distancias[grafo.deposito][atual];

@@ -67,7 +67,7 @@ vector<string> arquivosTrabalho = {
 	"DI-NEARP-n477-Q8k.dat",
 	"DI-NEARP-n477-Q16k.dat",
 	"DI-NEARP-n699-Q2k.dat",
-	"DI-NEARP-n699-Q4k.dat",
+	"DI-NEARP-n699-Q4k.dat", 
 	"DI-NEARP-n699-Q8k.dat",
 	"DI-NEARP-n699-Q16k.dat",
 	"DI-NEARP-n833-Q2k.dat",

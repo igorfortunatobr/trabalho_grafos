@@ -72,6 +72,7 @@ int main() {
 	int iQtdArquivos = (int)arquivosTrabalho.size();
 	
     for (int i = 0; i < iQtdArquivos; i++) {
+		clock_t tTempo1 = clock();
 		nomeArquivo = arquivosTrabalho[i];
 		
 		cout << "Processando arquivo " << nomeArquivo << endl;
@@ -111,13 +112,10 @@ int main() {
 			
 			cout << "Executando solucao inicial" << endl;
 			// medição de clocks para execução do algoritmo
-			clock_t tTempo1 = clock();
 			Solucao solucao = executarACO(grafo, dist);
 			clock_t tTempo2 = clock();
-			long lClockExecucaoReferencia = tTempo2 - tTempo1;
 
-			// aqui usamos o mesmo intervalo só como exemplo:
-			long lClockAcharSolucaoRef = lClockExecucaoReferencia; 
+			long lClockParaAcharSolucaoRef = tTempo2 - tTempo1;
 
 			string nomeArquivoSolucao = "sol-" + nomeArquivo;
 			
@@ -127,8 +125,8 @@ int main() {
 								solucao,
 							    0,
 							    1,
-							    lClockExecucaoReferencia,
-							    lClockAcharSolucaoRef,
+							    tTempo2,
+							    lClockParaAcharSolucaoRef,
 							    nomeArquivoSolucao
 			);
 

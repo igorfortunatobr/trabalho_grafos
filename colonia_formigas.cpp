@@ -12,11 +12,11 @@
 using namespace std;
 
 const double INFLUENCIA_FEROMONIO = 1.0; // Influência do feromônio
-const double INFLUENCIA_HEURISTICA = 2.0; // Influência da heurística (1/dist)
-const double TAXA_EVAPORACAO_FEROMONIO = 0.5; // Taxa de evaporação
+const double INFLUENCIA_HEURISTICA = 3.0; // Influência da heurística (1/dist)
+const double TAXA_EVAPORACAO_FEROMONIO = 0.2; // Taxa de evaporação
 
 const int NUM_FORMIGAS = 10;
-const int NUM_ITERACOES = 100;
+const int NUM_ITERACOES = 300;
 
 
 // Representa um serviço (nó, aresta ou arco requerido)
@@ -47,15 +47,20 @@ double heuristica(int distancia) {
 }
 
 // Escolhe o próximo serviço baseado em probabilidade
-int escolherProximo(const Servico& atual, const vector<Servico>& candidatos, const map<pair<int, int>, double>& feromonio, const vector<vector<int>>& dist) {
+int escolherProximo(const Servico& atual, const vector<Servico>& candidatos, const map<pair<int, int>, double>& feromonio, const vector<vector<int>>& dist, int deposito) {
     vector<double> vdProbabilidade;
     double soma = 0;
 
     for (const Servico& s : candidatos) {
-        auto chave = make_pair(atual.iVertice2, s.iVertice1);
+        auto chave = make_pair(atual.iVertice1, s.iVertice1);
 		double f = pow(feromonio.at(chave), INFLUENCIA_FEROMONIO);
-        double h = pow(heuristica(dist[atual.iVertice1][s.iVertice1]), INFLUENCIA_HEURISTICA);
-        vdProbabilidade.push_back(f * h);
+
+		// Novo cálculo heurístico baseado no custo total de inclusão
+		int custoInclusao = dist[atual.iVertice1][s.iVertice1] + s.custo + dist[s.iVertice2][deposito];
+
+		double h = pow(1.0 / (custoInclusao + 1), INFLUENCIA_HEURISTICA);
+
+		vdProbabilidade.push_back(f * h);
         soma += vdProbabilidade.back();
     }
 
@@ -105,7 +110,7 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distanci
     while (any_of(servicos.begin(), servicos.end(), [](Servico& servico){ return !servico.atendido; })) {
         Rota rota;
         int atual = grafo.deposito;
-        rota.custoTotal += distancias[grafo.deposito][atual];
+        //rota.custoTotal += distancias[grafo.deposito][atual];
 
         while (true) {
             vector<Servico> candidatos;
@@ -116,7 +121,7 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distanci
             if (candidatos.empty()) break;
 
             Servico servicoFicticioBase = {0, atual, atual, 0, 0, true};
-            int idEscolhido = escolherProximo(servicoFicticioBase, candidatos, feromonio, distancias);
+            int idEscolhido = escolherProximo(servicoFicticioBase, candidatos, feromonio, distancias, grafo.deposito);
             Servico servicoEscolhido = candidatos[idEscolhido];
             
 			for (auto& servico : servicos) {
@@ -130,12 +135,6 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distanci
             rota.demandaTotal += servicoEscolhido.demanda;
             rota.vsServicos.push_back(servicoEscolhido);
 
-            for (auto& servico : servicos) {
-                if (servico.id == servicoEscolhido.id) {
-                    servico.atendido = true;
-                    break;
-                }
-            }
             atual = servicoEscolhido.iVertice2;
         }
 
@@ -185,6 +184,16 @@ Solucao executarACO(const Grafo& grafo, const vector<vector<int>>& dist) {
                 }
                 feromonio[{atual, grafo.deposito}] += 1.0 / solucao.iCustoTotal;
             }
+        }
+        
+        // Reforço da melhor solução global (elitismo)
+        for (const auto& rota : melhorSolucao.rotas) {
+            int atual = grafo.deposito;
+            for (const auto& servico : rota.vsServicos) {
+                feromonio[{atual, servico.iVertice1}] += 1.0 / melhorSolucao.iCustoTotal;
+                atual = servico.iVertice2;
+            }
+            feromonio[{atual, grafo.deposito}] += 1.0 / melhorSolucao.iCustoTotal;
         }
     }
 

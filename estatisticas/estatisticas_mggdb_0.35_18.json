@@ -1,0 +1,41 @@
+{
+  "estatisticas": {
+    "nome": "mggdb_0.35_18",
+    "numVertices": 9,
+    "numArestas": 9,
+    "numArcos": 54,
+    "numVerticesRequeridos": 8,
+    "numArestasRequeridas": 5,
+    "numArcosRequeridos": 17,
+    "densidade": 1,
+    "componentes": 1,
+    "grauMin": 12,
+    "grauMax": 16,
+    "caminhoMedio": 3.41667,
+    "diametro": 7,
+    "intermediacao": [0, 0, 8, 0, 12, 0, 2, 2, 12, 6]
+   },
+    "matrizDistancia": [
+      [0, 3, 5, 4, 6, 4, 4, 5, 5],
+      [3, 0, 6, 1, 3, 3, 2, 2, 3],
+      [5, 6, 0, 5, 7, 4, 5, 4, 3],
+      [4, 1, 5, 0, 4, 2, 1, 1, 2],
+      [6, 3, 7, 4, 0, 6, 4, 5, 6],
+      [4, 3, 4, 2, 6, 0, 2, 1, 1],
+      [4, 2, 5, 1, 4, 2, 0, 1, 2],
+      [5, 2, 4, 1, 5, 1, 1, 0, 1],
+      [5, 3, 3, 2, 6, 1, 2, 1, 0]
+    ],
+    "matrizPredecessores": [
+      [1, 1, 1, 2, 1, 1, 1, 1, 6],
+      [2, 2, 2, 2, 2, 8, 4, 4, 8],
+      [3, 3, 3, 3, 3, 9, 9, 9, 3],
+      [2, 4, 4, 4, 2, 8, 4, 4, 8],
+      [5, 5, 5, 2, 5, 8, 5, 4, 7],
+      [6, 4, 9, 8, 2, 6, 8, 6, 6],
+      [7, 4, 9, 7, 7, 8, 7, 7, 7],
+      [8, 4, 9, 8, 2, 8, 8, 8, 8],
+      [6, 4, 9, 8, 7, 9, 9, 9, 9]
+    ],
+  "grafo_json": "{\n\t\"vertices\": [\n\t\t{ \"id\": 2 },\n\t\t{ \"id\": 3 },\n\t\t{ \"id\": 4 },\n\t\t{ \"id\": 5 },\n\t\t{ \"id\": 6 },\n\t\t{ \"id\": 7 },\n\t\t{ \"id\": 8 },\n\t\t{ \"id\": 9 }\n\t],\n\t\"arestas\": [\n\t\t{ \"origem\": 6, \"destino\": 7, \"custoTransito\": 6 },\n\t\t{ \"origem\": 5, \"destino\": 7, \"custoTransito\": 4 },\n\t\t{ \"origem\": 2, \"destino\": 5, \"custoTransito\": 3 },\n\t\t{ \"origem\": 2, \"destino\": 3, \"custoTransito\": 6 },\n\t\t{ \"origem\": 3, \"destino\": 5, \"custoTransito\": 7 },\n\t\t{ \"origem\": 2, \"destino\": 6, \"custoTransito\": 7 },\n\t\t{ \"origem\": 5, \"destino\": 6, \"custoTransito\": 7 },\n\t\t{ \"origem\": 7, \"destino\": 8, \"custoTransito\": 1 },\n\t\t{ \"origem\": 2, \"destino\": 4, \"custoTransito\": 1 }\n\t],\n\t\"arcos\": [\n\t\t{ \"origem\": 4, \"destino\": 8, \"custoTransito\": 1 },\n\t\t{ \"origem\": 1, \"destino\": 4, \"custoTransito\": 6 },\n\t\t{ \"origem\": 5, \"destino\": 9, \"custoTransito\": 8 },\n\t\t{ \"origem\": 1, \"destino\": 6, \"custoTransito\": 4 },\n\t\t{ \"origem\": 2, \"destino\": 8, \"custoTransito\": 5 },\n\t\t{ \"origem\": 1, \"destino\": 2, \"custoTransito\": 3 },\n\t\t{ \"origem\": 1, \"destino\": 8, \"custoTransito\": 5 },\n\t\t{ \"origem\": 1, \"destino\": 5, \"custoTransito\": 6 },\n\t\t{ \"origem\": 1, \"destino\": 7, \"custoTransito\": 4 },\n\t\t{ \"origem\": 5, \"destino\": 8, \"custoTransito\": 7 },\n\t\t{ \"origem\": 4, \"destino\": 7, \"custoTransito\": 1 },\n\t\t{ \"origem\": 3, \"destino\": 8, \"custoTransito\": 7 },\n\t\t{ \"origem\": 6, \"destino\": 8, \"custoTransito\": 1 },\n\t\t{ \"origem\": 7, \"destino\": 9, \"custoTransito\": 2 },\n\t\t{ \"origem\": 4, \"destino\": 6, \"custoTransito\": 3 },\n\t\t{ \"origem\": 4, \"destino\": 5, \"custoTransito\": 5 },\n\t\t{ \"origem\": 2, \"destino\": 7, \"custoTransito\": 4 },\n\t\t{ \"origem\": 3, \"destino\": 9, \"custoTransito\": 3 },\n\t\t{ \"origem\": 3, \"destino\": 7, \"custoTransito\": 7 },\n\t\t{ \"origem\": 3, \"destino\": 6, \"custoTransito\": 7 },\n\t\t{ \"origem\": 6, \"destino\": 9, \"custoTransito\": 1 },\n\t\t{ \"origem\": 1, \"destino\": 9, \"custoTransito\": 8 },\n\t\t{ \"origem\": 8, \"destino\": 9, \"custoTransito\": 1 },\n\t\t{ \"origem\": 2, \"destino\": 9, \"custoTransito\": 4 },\n\t\t{ \"origem\": 1, \"destino\": 3, \"custoTransito\": 5 },\n\t\t{ \"origem\": 4, \"destino\": 9, \"custoTransito\": 3 },\n\t\t{ \"origem\": 3, \"destino\": 4, \"custoTransito\": 5 },\n\t\t{ \"origem\": 9, \"destino\": 3, \"custoTransito\": 3 },\n\t\t{ \"origem\": 7, \"destino\": 3, \"custoTransito\": 7 },\n\t\t{ \"origem\": 6, \"destino\": 3, \"custoTransito\": 7 },\n\t\t{ \"origem\": 9, \"destino\": 6, \"custoTransito\": 1 },\n\t\t{ \"origem\": 9, \"destino\": 1, \"custoTransito\": 8 },\n\t\t{ \"origem\": 9, \"destino\": 8, \"custoTransito\": 1 },\n\t\t{ \"origem\": 9, \"destino\": 2, \"custoTransito\": 4 },\n\t\t{ \"origem\": 3, \"destino\": 1, \"custoTransito\": 5 },\n\t\t{ \"origem\": 9, \"destino\": 4, \"custoTransito\": 3 },\n\t\t{ \"origem\": 4, \"destino\": 3, \"custoTransito\": 5 },\n\t\t{ \"origem\": 8, \"destino\": 4, \"custoTransito\": 1 },\n\t\t{ \"origem\": 4, \"destino\": 1, \"custoTransito\": 6 },\n\t\t{ \"origem\": 9, \"destino\": 5, \"custoTransito\": 8 },\n\t\t{ \"origem\": 6, \"destino\": 1, \"custoTransito\": 4 },\n\t\t{ \"origem\": 8, \"destino\": 2, \"custoTransito\": 5 },\n\t\t{ \"origem\": 2, \"destino\": 1, \"custoTransito\": 3 },\n\t\t{ \"origem\": 8, \"destino\": 1, \"custoTransito\": 5 },\n\t\t{ \"origem\": 5, \"destino\": 1, \"custoTransito\": 6 },\n\t\t{ \"origem\": 7, \"destino\": 1, \"custoTransito\": 4 },\n\t\t{ \"origem\": 8, \"destino\": 5, \"custoTransito\": 7 },\n\t\t{ \"origem\": 7, \"destino\": 4, \"custoTransito\": 1 },\n\t\t{ \"origem\": 8, \"destino\": 3, \"custoTransito\": 7 },\n\t\t{ \"origem\": 8, \"destino\": 6, \"custoTransito\": 1 },\n\t\t{ \"origem\": 9, \"destino\": 7, \"custoTransito\": 2 },\n\t\t{ \"origem\": 6, \"destino\": 4, \"custoTransito\": 3 },\n\t\t{ \"origem\": 5, \"destino\": 4, \"custoTransito\": 5 },\n\t\t{ \"origem\": 7, \"destino\": 2, \"custoTransito\": 4 }\n\t]\n}\n"
+}

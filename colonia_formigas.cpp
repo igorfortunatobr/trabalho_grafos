@@ -102,48 +102,6 @@ vector<Servico> extrairServicos(const Grafo& grafo) {
     return vsLista;
 }
 
-void otimizarRota2opt(Rota& rota, const vector<vector<int>>& distancias, int deposito) {
-    if (rota.vsServicos.size() < 3) return; // nada a otimizar
-
-    bool melhorou;
-    do {
-        melhorou = false;
-
-        for (int i = 0; i < (int)rota.vsServicos.size() - 1; ++i) {
-            for (int j = i + 1; j < (int)rota.vsServicos.size(); ++j) {
-                // cria uma cópia temporária da rota
-                vector<Servico> novaOrdem = rota.vsServicos;
-
-                // inverte o segmento [i, j]
-                reverse(novaOrdem.begin() + i, novaOrdem.begin() + j + 1);
-
-                // calcula o novo custo
-                int novoCusto = 0;
-                int atual = deposito;
-
-                for (const auto& servico : novaOrdem) {
-                    novoCusto += distancias[atual][servico.iVertice1];
-                    novoCusto += servico.custo;
-                    atual = servico.iVertice2;
-                }
-
-                novoCusto += distancias[atual][deposito]; // volta ao depósito
-
-                if (novoCusto < rota.custoTotal) {
-                    // melhora encontrada
-                    rota.vsServicos = novaOrdem;
-                    rota.custoTotal = novoCusto;
-                    melhorou = true;
-                    break;
-                }
-            }
-            if (melhorou) break;
-        }
-
-    } while (melhorou);
-}
-
-
 // Construção de solução por uma formiga
 Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distancias, map<pair<int, int>, double>& feromonio) {
     vector<Servico> servicos = extrairServicos(grafo);
@@ -181,12 +139,9 @@ Solucao construirSolucao(const Grafo& grafo, const vector<vector<int>>& distanci
         }
 
         rota.custoTotal += distancias[atual][grafo.deposito];
-
-		// Otimização local da rota com 2-opt
-		otimizarRota2opt(rota, distancias, grafo.deposito);
-
-		solucao.iCustoTotal += rota.custoTotal;
-		solucao.rotas.push_back(rota);
+        
+        solucao.iCustoTotal += rota.custoTotal;
+        solucao.rotas.push_back(rota);
     }
 
     return solucao;

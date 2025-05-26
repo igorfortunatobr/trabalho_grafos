@@ -1,0 +1,45 @@
+{
+  "estatisticas": {
+    "nome": "CBMix23",
+    "numVertices": 11,
+    "numArestas": 2,
+    "numArcos": 25,
+    "numVerticesRequeridos": 3,
+    "numArestasRequeridas": 2,
+    "numArcosRequeridos": 15,
+    "densidade": 0.263636,
+    "componentes": 1,
+    "grauMin": 3,
+    "grauMax": 10,
+    "caminhoMedio": 63.0182,
+    "diametro": 179,
+    "intermediacao": [0, 0, 11, 16, 17, 1, 41, 11, 5, 8, 26, 16]
+   },
+    "matrizDistancia": [
+      [0, 19, 41, 79, 25, 29, 49, 43, 47, 67, 118],
+      [19, 0, 22, 60, 40, 20, 40, 57, 38, 58, 99],
+      [179, 160, 0, 38, 160, 140, 131, 154, 135, 113, 77],
+      [141, 122, 38, 0, 122, 102, 93, 116, 97, 75, 39],
+      [25, 40, 52, 90, 0, 20, 40, 18, 37, 58, 129],
+      [39, 20, 32, 70, 20, 0, 20, 37, 18, 38, 109],
+      [59, 40, 18, 56, 40, 20, 0, 57, 38, 18, 95],
+      [66, 47, 59, 97, 47, 27, 47, 0, 19, 41, 136],
+      [85, 66, 58, 96, 66, 46, 40, 19, 0, 22, 135],
+      [66, 47, 36, 74, 47, 27, 18, 41, 22, 0, 113],
+      [102, 83, 72, 39, 83, 63, 54, 77, 58, 36, 0]
+    ],
+    "matrizPredecessores": [
+      [1, 1, 2, 3, 1, 1, 6, 5, 6, 7, 4],
+      [2, 2, 2, 3, 6, 2, 6, 9, 6, 7, 4],
+      [2, 6, 3, 3, 6, 10, 10, 9, 10, 11, 4],
+      [2, 6, 4, 4, 6, 10, 10, 9, 10, 11, 4],
+      [5, 6, 6, 3, 5, 5, 6, 5, 8, 7, 4],
+      [2, 6, 6, 3, 6, 6, 6, 9, 6, 7, 4],
+      [2, 6, 7, 3, 6, 7, 7, 9, 6, 7, 4],
+      [2, 6, 6, 3, 6, 8, 6, 8, 8, 9, 4],
+      [2, 6, 7, 3, 6, 8, 10, 9, 9, 9, 4],
+      [2, 6, 7, 3, 6, 10, 10, 9, 10, 10, 4],
+      [2, 6, 7, 11, 6, 10, 10, 9, 10, 11, 11]
+    ],
+  "grafo_json": "{\n\t\"vertices\": [\n\t\t{ \"id\": 3 },\n\t\t{ \"id\": 4 },\n\t\t{ \"id\": 10 }\n\t],\n\t\"arestas\": [\n\t\t{ \"origem\": 1, \"destino\": 5, \"custoTransito\": 25 },\n\t\t{ \"origem\": 5, \"destino\": 6, \"custoTransito\": 20 }\n\t],\n\t\"arcos\": [\n\t\t{ \"origem\": 1, \"destino\": 6, \"custoTransito\": 29 },\n\t\t{ \"origem\": 2, \"destino\": 1, \"custoTransito\": 19 },\n\t\t{ \"origem\": 2, \"destino\": 3, \"custoTransito\": 22 },\n\t\t{ \"origem\": 2, \"destino\": 6, \"custoTransito\": 20 },\n\t\t{ \"origem\": 4, \"destino\": 11, \"custoTransito\": 39 },\n\t\t{ \"origem\": 5, \"destino\": 8, \"custoTransito\": 18 },\n\t\t{ \"origem\": 6, \"destino\": 2, \"custoTransito\": 20 },\n\t\t{ \"origem\": 6, \"destino\": 7, \"custoTransito\": 20 },\n\t\t{ \"origem\": 6, \"destino\": 9, \"custoTransito\": 18 },\n\t\t{ \"origem\": 7, \"destino\": 6, \"custoTransito\": 20 },\n\t\t{ \"origem\": 8, \"destino\": 6, \"custoTransito\": 27 },\n\t\t{ \"origem\": 9, \"destino\": 10, \"custoTransito\": 22 },\n\t\t{ \"origem\": 10, \"destino\": 6, \"custoTransito\": 27 },\n\t\t{ \"origem\": 10, \"destino\": 7, \"custoTransito\": 18 },\n\t\t{ \"origem\": 11, \"destino\": 4, \"custoTransito\": 39 },\n\t\t{ \"origem\": 1, \"destino\": 2, \"custoTransito\": 19 },\n\t\t{ \"origem\": 3, \"destino\": 4, \"custoTransito\": 38 },\n\t\t{ \"origem\": 4, \"destino\": 3, \"custoTransito\": 38 },\n\t\t{ \"origem\": 6, \"destino\": 3, \"custoTransito\": 32 },\n\t\t{ \"origem\": 7, \"destino\": 3, \"custoTransito\": 18 },\n\t\t{ \"origem\": 7, \"destino\": 10, \"custoTransito\": 18 },\n\t\t{ \"origem\": 8, \"destino\": 9, \"custoTransito\": 19 },\n\t\t{ \"origem\": 9, \"destino\": 8, \"custoTransito\": 19 },\n\t\t{ \"origem\": 10, \"destino\": 9, \"custoTransito\": 22 },\n\t\t{ \"origem\": 11, \"destino\": 10, \"custoTransito\": 36 }\n\t]\n}\n"
+}

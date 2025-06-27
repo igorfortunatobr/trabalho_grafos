@@ -6,7 +6,7 @@
 
 using namespace std;
 
-vector<string> arquivosTrabalho = {
+vector<string> vsArquivosTrabalho = {
     "BHW1.dat",
 	"BHW2.dat",
 	"BHW3.dat",

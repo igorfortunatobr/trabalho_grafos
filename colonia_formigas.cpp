@@ -283,7 +283,7 @@ void buscaLocal(
                         sequenciaOriginal.erase(sequenciaOriginal.begin() + si);
                         sequenciaDestino.insert(sequenciaDestino.begin() + pos, servico);
                         
-                        double novoCustoOrigem = custoRota(sequenciaDestino, vviDistancias, iDeposito);
+                        double novoCustoOrigem = custoRota(sequenciaOriginal, vviDistancias, iDeposito);
                         double novoCustoDestino = custoRota(sequenciaDestino, vviDistancias, iDeposito);
                         
                         double dGanho = (rotaOriginal.custoTotal + rotaDestino.custoTotal) - (novoCustoOrigem + novoCustoDestino);

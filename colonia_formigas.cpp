@@ -269,6 +269,9 @@ void buscaLocal(sSolucao& solucao,
                         double novoCustoA = custoRota(seqA, vsDistancias, iDeposito);
                         double novoCustoB = custoRota(seqB, vsDistancias, iDeposito);
                         double dGanho = (rotaA.custoTotal + rotaB.custoTotal) - (novoCustoA + novoCustoB);
+                        // Só aceita a troca se a melhoria for significativa 
+                        // (maior que 0.000001) para evitar aceitar diferenças 
+                        // causadas por imprecisão numérica 
                         if (dGanho > 1e-6) {
                             rotaA.vsServicos = seqA;
                             rotaB.vsServicos = seqB;

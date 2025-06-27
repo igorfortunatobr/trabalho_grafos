@@ -113,9 +113,11 @@ vector<sServico> extrairServicos(const sGrafo& grafo) {
 
 // Calcula o custo de uma rota (sequência de servicos) a partir do deposito:
 // custoRota corrigido: soma arcos so uma vez no fim
-double custoRota(const vector<sServico>& seq,
-                 const vector<vector<int>>& dist,
-                 int deposito) {
+double custoRota(
+					const vector<sServico>& seq,
+					const vector<vector<int>>& dist,
+					int deposito
+) {
     double custo = 0.0;
     int atual = deposito;
 
@@ -135,128 +137,179 @@ double custoRota(const vector<sServico>& seq,
 
 
 // 1) 2-opt: tenta inverter todos os trechos [i..j] e aceita se melhorar
-bool twoOptOneStep(vector<sServico>& seq,
-                   const vector<vector<int>>& dist,
-                   int deposito) {
-    int n = seq.size();
-    double custoOrig = custoRota(seq, dist, deposito);
-    double bestGain = 0.0;
-    int bi=-1, bj=-1;
+bool twoOptTrecho(
+					vector<sServico>& vsSequencia,
+					const vector<vector<int>>& vviDistancias,
+					int iDeposito
+) 
+{
+    int iQuantidadeServicos = vsSequencia.size();
+    double custoOriginal = custoRota(vsSequencia, vviDistancias, iDeposito);
+    double dMelhorGanho = 0.0;
+    int iMelhorI = -1;
+    int iMelhorJ = -1;
 
-    for (int i = 0; i < n-1; ++i) {
-        for (int j = i+1; j < n; ++j) {
-            reverse(seq.begin()+i, seq.begin()+j+1);
-            double novoC = custoRota(seq, dist, deposito);
-            double gain = custoOrig - novoC;
-            if (gain > bestGain) {
-                bestGain = gain;
-                bi = i; bj = j;
+    for (int i = 0; i < iQuantidadeServicos - 1; ++i) {
+        for (int j = i + 1; j < iQuantidadeServicos; ++j) {
+            reverse(vsSequencia.begin()+i, vsSequencia.begin()+j+1);
+            double novoCusto = custoRota(vsSequencia, vviDistancias, iDeposito);
+            double dGanho = custoOriginal - novoCusto;
+            
+            if (dGanho > dMelhorGanho) {
+                dMelhorGanho = dGanho;
+                iMelhorI = i; 
+                iMelhorJ = j;
             }
-            reverse(seq.begin()+i, seq.begin()+j+1);
+            
+            reverse(
+						vsSequencia.begin() + i, 
+						vsSequencia.begin() + j + 1
+			);
         }
     }
-    if (bestGain > 1e-6) {
-        reverse(seq.begin()+bi, seq.begin()+bj+1);
+    
+    // Só aceita a troca se a melhoria for significativa 
+	// (maior que 0.000001) para evitar aceitar diferenças 
+	// causadas por imprecisão numérica 
+    if (dMelhorGanho > 1e-6) {
+        reverse(
+					vsSequencia.begin() + iMelhorI, 
+					vsSequencia.begin() + iMelhorJ + 1
+		);
         return true;
     }
+    
     return false;
 }
 
 
 // 2) Swap simples de dois servicos
-bool swapOneStep(vector<sServico>& seq,
-                 const vector<vector<int>>& dist,
-                 int deposito) {
-    int n = seq.size();
-    double bestGain = 0;
-    int bi = -1, bj = -1;
-    double custoOrig = custoRota(seq, dist, deposito);
+bool swapServico(
+					vector<sServico>& vsSequencia,
+					const vector<vector<int>>& vviDistancias,
+					int iDeposito
+) 
+{
+    int iQuantidadeServicos = vsSequencia.size();
+    double dMelhorGanho = 0;
+    int iMelhorI = -1;
+    int iMelhorJ = -1;
+    double custoOriginal = custoRota(vsSequencia, vviDistancias, iDeposito);
 
-    for (int i = 0; i < n - 1; ++i) {
-        for (int j = i + 1; j < n; ++j) {
-            swap(seq[i], seq[j]);
-            double novoC = custoRota(seq, dist, deposito);
-            double gain = custoOrig - novoC;
-            if (gain > bestGain) {
-                bestGain = gain;
-                bi = i; bj = j;
+    for (int i = 0; i < iQuantidadeServicos - 1; ++i) {
+        for (int j = i + 1; j < iQuantidadeServicos; ++j) {
+            swap(vsSequencia[i], vsSequencia[j]);
+            double novoCusto = custoRota(vsSequencia, vviDistancias, iDeposito);
+            double dGanho = custoOriginal - novoCusto;
+            
+            if (dGanho > dMelhorGanho) {
+                dMelhorGanho = dGanho;
+                iMelhorI = i; 
+                iMelhorJ = j;
             }
-            swap(seq[i], seq[j]);
+            
+            swap(vsSequencia[i], vsSequencia[j]);
         }
     }
 
-    if (bestGain > 1e-6) {
-        swap(seq[bi], seq[bj]);
+	// Só aceita a troca se a melhoria for significativa 
+	// (maior que 0.000001) para evitar aceitar diferenças 
+	// causadas por imprecisão numérica 
+    if (dMelhorGanho > 1e-6) {
+        swap(vsSequencia[iMelhorI], vsSequencia[iMelhorJ]);
         return true;
     }
+    
     return false;
 }
 
 // 3) Loop principal de busca local: aplica until no move possível
-void buscaLocal(sSolucao& solucao,
-                const vector<vector<int>>& vsDistancias,
-                int iDeposito,
-                int iCapacidadeVeiculo) {
+void buscaLocal(
+					sSolucao& solucao,
+					const vector<vector<int>>& vviDistancias,
+					int iDeposito,
+					int iCapacidadeVeiculo
+) 
+{
+					
     // Busca local intra-rota (já existente)
     for (auto& rota : solucao.rotas) {
         auto& sequencia = rota.vsServicos;
         bool bMelhorou = true;
         while (bMelhorou) {
             bMelhorou = false;
-            if (twoOptOneStep(sequencia, vsDistancias, iDeposito)) { bMelhorou = true; continue; }
-            if (swapOneStep(sequencia, vsDistancias, iDeposito))  { bMelhorou = true; }
+            if (twoOptTrecho(sequencia, vviDistancias, iDeposito)) { 
+				bMelhorou = true; 
+				continue; 
+			}
+            if (swapServico(sequencia, vviDistancias, iDeposito))  { 
+				bMelhorou = true; 
+			}
         }
-        rota.custoTotal = custoRota(sequencia, vsDistancias, iDeposito);
+        rota.custoTotal = custoRota(sequencia, vviDistancias, iDeposito);
     }
+    
     // Busca local entre rotas (Relocate e Exchange)
     bool bMelhoraGlobal = true;
     while (bMelhoraGlobal) {
         bMelhoraGlobal = false;
         // Relocate: move um servico de uma rota para outra
-        for (size_t i = 0; i < solucao.rotas.size(); ++i) {
-            for (size_t j = 0; j < solucao.rotas.size(); ++j) {
-                if (i == j) continue;
-                auto& rotaOrig = solucao.rotas[i];
-                auto& rotaDest = solucao.rotas[j];
-                for (size_t si = 0; si < rotaOrig.vsServicos.size(); ++si) {
-                    sServico serv = rotaOrig.vsServicos[si];
+        for (int i = 0; i < (int)solucao.rotas.size(); ++i) {
+            for (int j = 0; j < (int)solucao.rotas.size(); ++j) {
+                if (i == j) 
+					continue;
+					
+                auto& rotaOriginal = solucao.rotas[i];
+                auto& rotaDestino = solucao.rotas[j];
+                for (int si = 0; si < (int)rotaOriginal.vsServicos.size(); ++si) {
+                    sServico servico = rotaOriginal.vsServicos[si];
                     // So move se couber na rota destino
-                    if (rotaDest.demandaTotal + serv.demanda > iCapacidadeVeiculo) continue;
-                    for (size_t pos = 0; pos <= rotaDest.vsServicos.size(); ++pos) {
+                    if (rotaDestino.demandaTotal + servico.demanda > iCapacidadeVeiculo) continue;
+                    for (int pos = 0; pos <= (int)rotaDestino.vsServicos.size(); ++pos) {
                         // Testa insercao
-                        auto seqOrig = rotaOrig.vsServicos;
-                        auto seqDest = rotaDest.vsServicos;
-                        seqOrig.erase(seqOrig.begin() + si);
-                        seqDest.insert(seqDest.begin() + pos, serv);
-                        double novoCustoOrigem = custoRota(seqOrig, vsDistancias, iDeposito);
-                        double novoCustoDestino = custoRota(seqDest, vsDistancias, iDeposito);
-                        double ganho = (rotaOrig.custoTotal + rotaDest.custoTotal) - (novoCustoOrigem + novoCustoDestino);
-                        if (ganho > 1e-6) {
+                        auto sequenciaOriginal = rotaOriginal.vsServicos;
+                        auto sequenciaDestino = rotaDestino.vsServicos;
+                        sequenciaOriginal.erase(sequenciaOriginal.begin() + si);
+                        sequenciaDestino.insert(sequenciaDestino.begin() + pos, servico);
+                        double novoCustoOrigem = custoRota(sequenciaDestino, vviDistancias, iDeposito);
+                        double novoCustoDestino = custoRota(sequenciaDestino, vviDistancias, iDeposito);
+                        double dGanho = (rotaOriginal.custoTotal + rotaDestino.custoTotal) - (novoCustoOrigem + novoCustoDestino);
+                        
+                        // Só aceita a troca se a melhoria for significativa 
+                        // (maior que 0.000001) para evitar aceitar diferenças 
+                        // causadas por imprecisão numérica 
+                        if (dGanho > 1e-6) {
                             // Aplica movimento
-                            rotaOrig.vsServicos = seqOrig;
-                            rotaDest.vsServicos = seqDest;
-                            rotaOrig.demandaTotal -= serv.demanda;
-                            rotaDest.demandaTotal += serv.demanda;
-                            rotaOrig.custoTotal = novoCustoOrigem;
-                            rotaDest.custoTotal = novoCustoDestino;
+                            rotaOriginal.vsServicos = sequenciaOriginal;
+                            rotaDestino.vsServicos = sequenciaDestino;
+                            rotaOriginal.demandaTotal -= servico.demanda;
+                            rotaDestino.demandaTotal += servico.demanda;
+                            rotaOriginal.custoTotal = novoCustoOrigem;
+                            rotaDestino.custoTotal = novoCustoDestino;
                             bMelhoraGlobal = true;
                             break;
                         }
                     }
-                    if (bMelhoraGlobal) break;
+                    if (bMelhoraGlobal) 
+						break;
                 }
-                if (bMelhoraGlobal) break;
+                if (bMelhoraGlobal) 
+					break;
             }
-            if (bMelhoraGlobal) break;
+            if (bMelhoraGlobal) 
+				break;
         }
-        if (bMelhoraGlobal) continue;
+        
+        if (bMelhoraGlobal) 
+			continue;
+        
         // Exchange: troca servicos entre rotas
-        for (size_t i = 0; i < solucao.rotas.size(); ++i) {
-            for (size_t j = i + 1; j < solucao.rotas.size(); ++j) {
+        for (int i = 0; i < (int)solucao.rotas.size(); ++i) {
+            for (int j = i + 1; j < (int)solucao.rotas.size(); ++j) {
                 auto& rotaA = solucao.rotas[i];
                 auto& rotaB = solucao.rotas[j];
-                for (size_t iContadorA = 0; iContadorA < rotaA.vsServicos.size(); ++iContadorA) {
-                    for (size_t iContadorB = 0; iContadorB < rotaB.vsServicos.size(); ++iContadorB) {
+                for (int iContadorA = 0; iContadorA < (int)rotaA.vsServicos.size(); ++iContadorA) {
+                    for (int iContadorB = 0; iContadorB < (int)rotaB.vsServicos.size(); ++iContadorB) {
                         sServico servicoA = rotaA.vsServicos[iContadorA];
                         sServico servicoB = rotaB.vsServicos[iContadorB];
                         int novaDemA = rotaA.demandaTotal - servicoA.demanda + servicoB.demanda;
@@ -266,9 +319,10 @@ void buscaLocal(sSolucao& solucao,
                         auto seqB = rotaB.vsServicos;
                         seqA[iContadorA] = servicoB;
                         seqB[iContadorB] = servicoA;
-                        double novoCustoA = custoRota(seqA, vsDistancias, iDeposito);
-                        double novoCustoB = custoRota(seqB, vsDistancias, iDeposito);
+                        double novoCustoA = custoRota(seqA, vviDistancias, iDeposito);
+                        double novoCustoB = custoRota(seqB, vviDistancias, iDeposito);
                         double dGanho = (rotaA.custoTotal + rotaB.custoTotal) - (novoCustoA + novoCustoB);
+                        
                         // Só aceita a troca se a melhoria for significativa 
                         // (maior que 0.000001) para evitar aceitar diferenças 
                         // causadas por imprecisão numérica 
@@ -290,6 +344,7 @@ void buscaLocal(sSolucao& solucao,
             if (bMelhoraGlobal) break;
         }
     }
+    
     // Atualiza custo total da solucao
     solucao.iCustoTotal = 0;
     for (auto& rota : solucao.rotas)
@@ -298,11 +353,15 @@ void buscaLocal(sSolucao& solucao,
 
 
 // Construcao de solucao por uma formiga
-sSolucao construirSolucao(const sGrafo& grafo, const vector<vector<int>>& distancias, map<pair<int, int>, double>& feromonio)  {
+sSolucao construirSolucao(
+							const sGrafo& grafo, 
+							const vector<vector<int>>& vviDistancias, 
+							map<pair<int, int>, double>& dFeromonio
+)  {
      // 1) extrai servicos e inicializa flags
     vector<sServico> servicos = extrairServicos(grafo);
     int iTamanho = (int)servicos.size();
-    vector<bool> atendido(iTamanho, false);
+    vector<bool> vbAtendido(iTamanho, false);
 
     // 2) Aqui: gen e dis sao criados UMA ÚNICA VEZ,
     //    antes do laco principal
@@ -312,59 +371,72 @@ sSolucao construirSolucao(const sGrafo& grafo, const vector<vector<int>>& distan
     sSolucao solucao;
     // <-- Comeca o loop que monta cada rota:
     while (any_of(servicos.begin(), servicos.end(),
-                  [](const sServico& s){ return !s.atendido; })) {
+                  [](const sServico& servico){ return !servico.atendido; })) {
         sRota rota;
-        int atual = grafo.deposito;
+        int iAtual = grafo.deposito;
 
         // 3) Selecao de candidatos
         while (true) {
-            vector<sServico> candidatos;
-            for (auto& s : servicos) {
-                if (!s.atendido
-                    && rota.demandaTotal + s.demanda <= grafo.capacidadeVeiculo)
-                    candidatos.push_back(s);
+            vector<sServico> vsCandidatos;
+            for (auto& servico : servicos) {
+                if (
+						!servico.atendido
+						&& rota.demandaTotal + servico.demanda <= grafo.capacidadeVeiculo
+				)
+                    vsCandidatos.push_back(servico);
             }
             
-            if (candidatos.empty()) break;
+            if (vsCandidatos.empty()) 
+				break;
 
             // cálculo de probabilidades…
-            vector<double> prob(candidatos.size());
-            double soma = 0;
-            for (size_t i = 0; i < candidatos.size(); ++i) {
-                auto chave = make_pair(atual, candidatos[i].iVertice1);
-                double f = pow(feromonio.at(chave), INFLUENCIA_FEROMONIO);
+            vector<double> vdProbabilidades(vsCandidatos.size());
+            double dSoma = 0;
+            for (int i = 0; i < (int)vsCandidatos.size(); ++i) {
+                auto chave = make_pair(iAtual, vsCandidatos[i].iVertice1);
+                double f = pow(dFeromonio.at(chave), INFLUENCIA_FEROMONIO);
                 // custo mínimo de ir até o servico
-			    int custoIda = distancias[atual][candidatos[i].iVertice1];
+			    int iCustoIda = vviDistancias[iAtual][vsCandidatos[i].iVertice1];
 			    // custo mínimo de voltar ao deposito apos o servico
-			    int custoVolta = distancias[candidatos[i].iVertice2][grafo.deposito];
-			    int custoIncl = custoIda
-							 + candidatos[i].custo
-							 + custoVolta;
-                double h = pow(1.0 / (custoIncl + 1), INFLUENCIA_HEURISTICA);
-				prob[i] = f * h;
-                soma += prob[i];
+			    int iCustoVolta = vviDistancias[vsCandidatos[i].iVertice2][grafo.deposito];
+			    int iCustoTotal = iCustoIda + 
+								  vsCandidatos[i].custo + 
+								  iCustoVolta;
+								
+                double h = pow(1.0 / (iCustoTotal + 1), INFLUENCIA_HEURISTICA);
+				vdProbabilidades[i] = f * h;
+                dSoma += vdProbabilidades[i];
             }
 
             // roleta usando o **mesmo** gen e dis
-            double r = dis(gen) * soma;
-            double cumul = 0;
-            int idx = (int)prob.size() - 1;
-            for (size_t i = 0; i < prob.size(); ++i) {
-                cumul += prob[i];
-                if (r <= cumul) { idx = (int)i; break; }
+            double dRoleta = dis(gen) * dSoma;
+            double dCumulativo = 0;
+            
+            int idEscolhido = (int)vdProbabilidades.size() - 1;
+            
+            for (int i = 0; i < (int)vdProbabilidades.size(); ++i) {
+                dCumulativo += vdProbabilidades[i];
+                
+                if (dRoleta <= dCumulativo) { 
+					idEscolhido = (int)i; 
+					break; 
+				}
             }
 
             // marca e avanca…
-            sServico& sel = candidatos[idx];
-            for (auto& s : servicos)
-                if (s.id == sel.id) { s.atendido = true; break; }
-            rota.vsServicos.push_back(sel);
-            rota.demandaTotal += sel.demanda;
-            rota.custoTotal   += distancias[atual][sel.iVertice1] + sel.custo;
-            atual = sel.iVertice2;
+            sServico& servicoSelecionado = vsCandidatos[idEscolhido];
+            for (auto& servico : servicos)
+                if (servico.id == servicoSelecionado.id) { 
+					servico.atendido = true; 
+					break; 
+				}
+            rota.vsServicos.push_back(servicoSelecionado);
+            rota.demandaTotal += servicoSelecionado.demanda;
+            rota.custoTotal   += vviDistancias[iAtual][servicoSelecionado.iVertice1] + servicoSelecionado.custo;
+            iAtual = servicoSelecionado.iVertice2;
         }
 
-        rota.custoTotal += distancias[atual][grafo.deposito];
+        rota.custoTotal += vviDistancias[iAtual][grafo.deposito];
         solucao.iCustoTotal += rota.custoTotal;
         solucao.rotas.push_back(rota);
     }

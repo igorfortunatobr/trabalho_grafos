@@ -12,7 +12,7 @@
 using namespace std;
 
 double INFLUENCIA_FEROMONIO = 1.0; // Influência do feromônio
-double INFLUENCIA_HEURISTICA = 3.0; // Influência da heurística (1/dist)
+double INFLUENCIA_HEURISTICA = 3.0; // Influência da heurística (1/distancia)
 const double TAXA_EVAPORACAO_FEROMONIO = 0.2; // Taxa de evaporacao
 
 int NUM_FORMIGAS = 20;
@@ -42,26 +42,34 @@ struct sSolucao {
 };
 
 // Funcao heurística (quanto menor a distância, melhor)
-double heuristica(int distancia) {
-    return distancia > 0 ? 1.0 / distancia : 0.0001;
+double heuristica(int iDistancia) {
+    return iDistancia > 0 ? 1.0 / iDistancia : 0.0001;
 }
 
 // Escolhe o proximo servico baseado em probabilidade
-int escolherProximo(const sServico& atual, const vector<sServico>& candidatos, const map<pair<int, int>, double>& feromonio, const vector<vector<int>>& dist, int deposito) {
+int escolherProximo(
+						const sServico& servicoAtual, 
+						const vector<sServico>& vsCandidatos, 
+						const map<pair<int, int>, double>& mFeromonio, 
+						const vector<vector<int>>& vviDistancias, 
+						int iDeposito
+) {
     vector<double> vdProbabilidade;
-    double soma = 0;
+    double dSoma = 0;
 
-    for (const sServico& s : candidatos) {
-        auto chave = make_pair(atual.iVertice1, s.iVertice1);
-		double f = pow(feromonio.at(chave), INFLUENCIA_FEROMONIO);
+    for (const sServico& servicoCandidato : vsCandidatos) {
+        auto chave = make_pair(servicoAtual.iVertice1, servicoCandidato.iVertice1);
+		double f = pow(mFeromonio.at(chave), INFLUENCIA_FEROMONIO);
 
 		// Novo cálculo heurístico baseado no custo total de inclusao
-		int custoInclusao = dist[atual.iVertice1][s.iVertice1] + s.custo + dist[s.iVertice2][deposito];
+		int iCustoInclusao = vviDistancias[servicoAtual.iVertice1][servicoCandidato.iVertice1] + 
+							 servicoCandidato.custo + 
+							 vviDistancias[servicoCandidato.iVertice2][iDeposito];
 
-		double h = pow(1.0 / (custoInclusao + 1), INFLUENCIA_HEURISTICA);
+		double h = pow(1.0 / (iCustoInclusao + 1), INFLUENCIA_HEURISTICA);
 
 		vdProbabilidade.push_back(f * h);
-        soma += vdProbabilidade.back();
+        dSoma += vdProbabilidade.back();
     }
 
     // Roleta para gerar valor aleatorio, conforme o conceito do ACO
@@ -70,13 +78,14 @@ int escolherProximo(const sServico& atual, const vector<sServico>& candidatos, c
     // Inicializa o gerador com a semente gerada pelo random_device
     mt19937 gen(geradorSeed());
     // Cria uma distribuicao uniforme real no intervalo (0.0, soma), ou seja, todos valores no intervalo tem mesma chance
-    uniform_real_distribution<> dis(0.0, soma);
+    uniform_real_distribution<> dis(0.0, dSoma);
     double dNumeroAleatorio = dis(gen);
     
     for (int i = 0; i < (int)vdProbabilidade.size(); ++i) {
         dNumeroAleatorio -= vdProbabilidade[i];
         if (dNumeroAleatorio <= 0) return i;
     }
+    
     return (int)vdProbabilidade.size() - 1;
 }
 
@@ -98,14 +107,14 @@ vector<sServico> extrairServicos(const sGrafo& grafo) {
             vsLista.push_back(sNovoServico);
         }
 
-    // arestas (use demanda > 0 como critério)
+    // arestas (demanda > 0 como critério)
     for (const auto& aresta : grafo.vsArestas)
         if (aresta.demanda > 0)
             vsLista.push_back({id++, aresta.origem, aresta.destino, aresta.demanda, aresta.custoAtendimento, false});
 
     // arcos
     for (const auto& arco : grafo.vsArcos)
-        if (arco.requerServico)  // aqui você já estava marcando corretamente
+        if (arco.requerServico)  // aqui já estava marcando corretamente
             vsLista.push_back({id++, arco.origem, arco.destino, arco.demanda, arco.custoAtendimento, false});
 
     return vsLista;
@@ -114,25 +123,26 @@ vector<sServico> extrairServicos(const sGrafo& grafo) {
 // Calcula o custo de uma rota (sequência de servicos) a partir do deposito:
 // custoRota corrigido: soma arcos so uma vez no fim
 double custoRota(
-					const vector<sServico>& seq,
-					const vector<vector<int>>& dist,
-					int deposito
+					const vector<sServico>& vsSequencia,
+					const vector<vector<int>>& vviDistancias,
+					int iDeposito
 ) {
-    double custo = 0.0;
-    int atual = deposito;
+    double dCusto = 0.0;
+    int iAtual = iDeposito;
 
-    for (const auto& s : seq) {
+    for (const auto& servico : vsSequencia) {
         // ir de 'atual' até o início do servico
-        custo += dist[atual][s.iVertice1];
+        dCusto += vviDistancias[iAtual][servico.iVertice1];
         // custo interno do servico
-        custo += s.custo;
+        dCusto += servico.custo;
         // agora a formiga sai do servico no vértice2
-        atual = s.iVertice2;
+        iAtual = servico.iVertice2;
     }
+    
     // so aqui soma o retorno ao deposito, **uma vez**
-    custo += dist[atual][deposito];
+    dCusto += vviDistancias[iAtual][iDeposito];
 
-    return custo;
+    return dCusto;
 }
 
 
@@ -269,10 +279,13 @@ void buscaLocal(
                         // Testa insercao
                         auto sequenciaOriginal = rotaOriginal.vsServicos;
                         auto sequenciaDestino = rotaDestino.vsServicos;
+                        
                         sequenciaOriginal.erase(sequenciaOriginal.begin() + si);
                         sequenciaDestino.insert(sequenciaDestino.begin() + pos, servico);
+                        
                         double novoCustoOrigem = custoRota(sequenciaDestino, vviDistancias, iDeposito);
                         double novoCustoDestino = custoRota(sequenciaDestino, vviDistancias, iDeposito);
+                        
                         double dGanho = (rotaOriginal.custoTotal + rotaDestino.custoTotal) - (novoCustoOrigem + novoCustoDestino);
                         
                         // Só aceita a troca se a melhoria for significativa 
@@ -282,8 +295,10 @@ void buscaLocal(
                             // Aplica movimento
                             rotaOriginal.vsServicos = sequenciaOriginal;
                             rotaDestino.vsServicos = sequenciaDestino;
+                            
                             rotaOriginal.demandaTotal -= servico.demanda;
                             rotaDestino.demandaTotal += servico.demanda;
+                            
                             rotaOriginal.custoTotal = novoCustoOrigem;
                             rotaDestino.custoTotal = novoCustoDestino;
                             bMelhoraGlobal = true;
@@ -312,15 +327,22 @@ void buscaLocal(
                     for (int iContadorB = 0; iContadorB < (int)rotaB.vsServicos.size(); ++iContadorB) {
                         sServico servicoA = rotaA.vsServicos[iContadorA];
                         sServico servicoB = rotaB.vsServicos[iContadorB];
+                        
                         int novaDemA = rotaA.demandaTotal - servicoA.demanda + servicoB.demanda;
                         int novaDemB = rotaB.demandaTotal - servicoB.demanda + servicoA.demanda;
-                        if (novaDemA > iCapacidadeVeiculo || novaDemB > iCapacidadeVeiculo) continue;
+                        
+                        if (novaDemA > iCapacidadeVeiculo || novaDemB > iCapacidadeVeiculo) 
+							continue;
+                        
                         auto seqA = rotaA.vsServicos;
                         auto seqB = rotaB.vsServicos;
+                        
                         seqA[iContadorA] = servicoB;
                         seqB[iContadorB] = servicoA;
+                        
                         double novoCustoA = custoRota(seqA, vviDistancias, iDeposito);
                         double novoCustoB = custoRota(seqB, vviDistancias, iDeposito);
+                        
                         double dGanho = (rotaA.custoTotal + rotaB.custoTotal) - (novoCustoA + novoCustoB);
                         
                         // Só aceita a troca se a melhoria for significativa 
@@ -399,11 +421,11 @@ sSolucao construirSolucao(
 			    int iCustoIda = vviDistancias[iAtual][vsCandidatos[i].iVertice1];
 			    // custo mínimo de voltar ao deposito apos o servico
 			    int iCustoVolta = vviDistancias[vsCandidatos[i].iVertice2][grafo.deposito];
-			    int iCustoTotal = iCustoIda + 
+			    int iCustoInclusao = iCustoIda + 
 								  vsCandidatos[i].custo + 
 								  iCustoVolta;
 								
-                double h = pow(1.0 / (iCustoTotal + 1), INFLUENCIA_HEURISTICA);
+                double h = pow(1.0 / (iCustoInclusao + 1), INFLUENCIA_HEURISTICA);
 				vdProbabilidades[i] = f * h;
                 dSoma += vdProbabilidades[i];
             }
